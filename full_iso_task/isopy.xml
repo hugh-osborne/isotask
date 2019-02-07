@@ -1,0 +1,111 @@
+<Simulation>
+<WeightType>CustomConnectionParameters</WeightType>
+<Algorithms>
+<Algorithm type="GridAlgorithm" name="INTERNEURON" modelfile="int.model" tau_refractive="0.0" transformfile="int_0_0_0_0_.tmat" start_v="-64.0" start_w="0.6" ratemethod="AvgV">
+<TimeStep>0.000001</TimeStep>
+</Algorithm>
+<Algorithm type="GridSomaDendriteAlgorithm" name="SOMA" modelfile="soma.model" tau_refractive="0.0" transformfile="soma_0_0_0_0_.tmat" start_v="-0.5" start_w="0.0000001" >
+<TimeStep>0.000001</TimeStep>
+</Algorithm>
+<Algorithm type="GridSomaDendriteAlgorithm" name="DENDRITE" modelfile="dendrite.model" tau_refractive="0.0" transformfile="dendrite_0_0_0_0_.tmat" start_v="-0.5" start_w="0.0000001" >
+<TimeStep>0.000001</TimeStep>
+</Algorithm>
+</Algorithms>
+<Nodes>
+<Node algorithm="INTERNEURON" name="INT_AG" type="NEUTRAL" />
+<Node algorithm="INTERNEURON" name="INT_ANTAG" type="NEUTRAL" />
+
+<Node algorithm="SOMA" name="MN_RF" type="NEUTRAL" />
+<Node algorithm="DENDRITE" name="MN_RF_DEND" type="NEUTRAL" />
+<Node algorithm="SOMA" name="MN_VL" type="NEUTRAL" />
+<Node algorithm="DENDRITE" name="MN_VL_DEND" type="NEUTRAL" />
+<Node algorithm="SOMA" name="MN_VM" type="NEUTRAL" />
+<Node algorithm="DENDRITE" name="MN_VM_DEND" type="NEUTRAL" />
+
+<Node algorithm="SOMA" name="MN_ST" type="NEUTRAL" />
+<Node algorithm="DENDRITE" name="MN_ST_DEND" type="NEUTRAL" />
+<Node algorithm="SOMA" name="MN_BF" type="NEUTRAL" />
+<Node algorithm="DENDRITE" name="MN_BF_DEND" type="NEUTRAL" />
+</Nodes>
+<Connections>
+
+<Connection In="MN_RF" Out="MN_RF_DEND" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+<Connection In="MN_RF_DEND" Out="MN_RF" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+
+<Connection In="MN_VL" Out="MN_VL_DEND" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+<Connection In="MN_VL_DEND" Out="MN_VL" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+
+<Connection In="MN_VM" Out="MN_VM_DEND" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+<Connection In="MN_VM_DEND" Out="MN_VM" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+
+<Connection In="MN_ST" Out="MN_ST_DEND" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+<Connection In="MN_ST_DEND" Out="MN_ST" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+
+<Connection In="MN_BF" Out="MN_BF_DEND" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+<Connection In="MN_BF_DEND" Out="MN_BF" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+
+<Connection In="INT_AG" Out="MN_ST" type="input" avgv_offset="64.0" num_connections="200" efficacy="-0.01" delay="0.0" conductance="0.0"/>
+<Connection In="INT_AG" Out="MN_BF" type="input" avgv_offset="64.0" num_connections="200" efficacy="-0.01" delay="0.0" conductance="0.0"/>
+
+<Connection In="INT_ANTAG" Out="MN_RF" type="input" avgv_offset="64.0" num_connections="200" efficacy="-0.01" delay="0.0" conductance="0.0"/>
+<Connection In="INT_ANTAG" Out="MN_VL" type="input" avgv_offset="64.0" num_connections="200" efficacy="-0.01" delay="0.0" conductance="0.0"/>
+<Connection In="INT_ANTAG" Out="MN_VM" type="input" avgv_offset="64.0" num_connections="200" efficacy="-0.01" delay="0.0" conductance="0.0"/>
+
+<!--<Connection In="INT_ANTAG" Out="INT_AG" avgv_offset="0.5" num_connections="50" efficacy="-0.1" delay="0.002" />
+<Connection In="INT_AG" Out="INT_ANTAG" avgv_offset="0.5" num_connections="50" efficacy="-0.1" delay="0.002" />-->
+
+<IncomingConnection Node="INT_AG" num_connections="1" efficacy="0.1" delay="0.0" />
+<IncomingConnection Node="INT_ANTAG" num_connections="1" efficacy="0.1" delay="0.0" />
+<IncomingConnection Node="MN_RF" type="input" num_connections="1" efficacy="0.01" delay="0.0" conductance="0.0"/>
+<IncomingConnection Node="MN_VL" type="input" num_connections="1" efficacy="0.01" delay="0.0" conductance="0.0"/>
+<IncomingConnection Node="MN_VM" type="input" num_connections="1" efficacy="0.01" delay="0.0" conductance="0.0"/>
+<IncomingConnection Node="MN_ST" type="input" num_connections="1" efficacy="0.01" delay="0.0" conductance="0.0"/>
+<IncomingConnection Node="MN_BF" type="input" num_connections="1" efficacy="0.01" delay="0.0" conductance="0.0"/>
+
+<OutgoingConnection Node="MN_RF"/>
+<OutgoingConnection Node="MN_VL"/>
+<OutgoingConnection Node="MN_VM"/>
+<OutgoingConnection Node="MN_ST"/>
+<OutgoingConnection Node="MN_BF"/>
+</Connections>
+<Reporting>
+<!--<Display node="INT_AG" />
+<Display node="INT_ANTAG" />
+<Display node="MN_ST" />
+<Display node="MN_RF" />-->
+<Rate node="INT_AG" t_interval="0.0001" />
+<Rate node="INT_ANTAG" t_interval="0.0001" />
+<Rate node="MN_RF" t_interval="0.0001" />
+<Rate node="MN_VL" t_interval="0.0001" />
+<Rate node="MN_VM" t_interval="0.0001" />
+<Rate node="MN_ST" t_interval="0.0001" />
+<Rate node="MN_BF" t_interval="0.0001" />
+</Reporting>
+<SimulationIO>
+<SimulationName>iso</SimulationName>
+<OnScreen>FALSE</OnScreen>
+<WithState>TRUE</WithState>
+<WriteNet>FALSE</WriteNet>
+<CanvasParameter>
+<T_min>0</T_min>
+<T_max>0.3</T_max>
+<F_min>0</F_min>
+<F_max>20</F_max>
+<State_min>0</State_min>
+<State_max>1.0</State_max>
+<Dense_min>0</Dense_min>
+<Dense_max>2.5</Dense_max>
+</CanvasParameter>
+<CanvasNode Name="INT_AG" />
+</SimulationIO>
+<SimulationRunParameter>
+<max_iter>1000000</max_iter>
+<t_begin>0</t_begin>
+<t_end>1.0</t_end>
+<t_report>0.00001</t_report>
+<t_state_report>0.00001</t_state_report>
+<t_step>0.00001</t_step>
+<name_log>iso.log</name_log>
+<master_steps>40</master_steps>
+</SimulationRunParameter>
+</Simulation>
