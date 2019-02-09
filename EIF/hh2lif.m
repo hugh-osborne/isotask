@@ -51,8 +51,12 @@ h_0 = 0.18;
 m_0 = 0;
 n_0 = 0.5;
 
+v_0_int = -64;
+h_0_int = 0.6;
+m_0_int = 0;
+
 % Input current
-I = 2;
+I = 4;
 
 % v_rest is the resting potential of this neuron
 % User must find the resting potential :
@@ -109,9 +113,14 @@ z_0 = (h_0 - h_inf(v_rest)) / sin(alpha);
 
 % plot the full HH model
 % tspan = 0:0.001:100.0;
-% [t,s] = ode23s(@HHv_full, tspan, [v_0 m_0 h_0 n_0]);
+% [t,s] = ode23s(@HHv_full_int, tspan, [v_0_int h_0_int m_0_int]);
 % vs = s(:,1);
 % plot(t,vs,'k');
+% hold on;
+% tspan = 0:0.001:100.0;
+% [t,s] = ode23s(@HHv_2D_int, tspan, [v_0_int m_0_int]);
+% vs = s(:,1);
+% plot(t,vs,'g');
 % hold on;
 % % 3D using m_inf
 % tspan = 0:0.01:100.0;
@@ -226,15 +235,15 @@ z_0 = (h_0 - h_inf(v_rest)) / sin(alpha);
 % plot(ns(2000:end),hs(2000:end),'r');
 
 % plot the 1D model
-tspan = 0:0.001:100.0;
-for i = 0:10
-    reset = odeset('Events', @HHv_reset);
-    [t,s,te,ye,ie] = ode23s(@HHv_exp, tspan, [-65], reset);
-    vs = s(:,1);
-    plot(t,vs,'r');
-    hold on;
-    tspan = te+1.7:0.001:100.0;
-end
+% tspan = 0:0.001:100.0;
+% for i = 0:20
+%     reset = odeset('Events', @HHv_reset);
+%     [t,s,te,ye,ie] = ode23s(@HHv_exp_int, tspan, [-70], reset);
+%     vs = s(:,1);
+%     plot(t,vs,'r');
+%     hold on;
+%     tspan = te+2.5:0.001:100.0;
+% end
 
 % Generate 1D mesh
 % 
@@ -244,7 +253,7 @@ global outId;
 global strip;
 global formatSpec;
 
-timestep = 1; %ms
+timestep = 0.1; %ms
 revId = fopen('exp.rev', 'w');
 fprintf(revId, '<Mapping Type="Reversal">\n');
 
@@ -256,26 +265,26 @@ formatSpec = '%.12f ';
 strip = 0;
 
 I = 0;
-tspan = 0:timestep:180;
-v_0 = -55.56;
-[t,s] = ode23s(@HHv_exp, tspan, [v_0]);
+tspan = 0:timestep:200;
+v_0 = -52.3;
+[t,s] = ode23s(@HHv_exp_int, tspan, [v_0]);
 
 gen_strip(s);
 hold on;
 
 fprintf(revId, '%i,%i\t%i,%i\t%f\n', strip, 0, 0,0, 1.0);
 
-tspan = 0:timestep:150;
-v_0 = -55.58;
-[t,s] = ode23s(@HHv_exp, tspan, [v_0]);
+tspan = 0:timestep:220;
+v_0 = -52.4;
+[t,s] = ode23s(@HHv_exp_int, tspan, [v_0]);
 
 gen_strip(s);
 
 fprintf(revId, '%i,%i\t%i,%i\t%f\n', strip, 0, 0,0, 1.0);
 
-tspan = 0:timestep:150;
+tspan = 0:timestep:200;
 v_0 = -100;
-[t,s] = ode23s(@HHv_exp, tspan, [v_0]);
+[t,s] = ode23s(@HHv_exp_int, tspan, [v_0]);
 
 vs = s(:,1);
 
@@ -407,6 +416,64 @@ function vec = HHv_full(t, vs)
     vec = [v_prime;m_prime;h_prime;n_prime];
 end
 
+function vec = HHv_full_int(t, vs)
+    global I;
+    E_na = 55; 
+    E_k = -80;
+    C = 1; 
+
+    g_na = 120; 
+    g_k = 100;
+    g_l = 0.51; 
+    E_l = -64.0; 
+
+    theta_h = -55; 
+    sig_h = 7; 
+
+    v = vs(1);
+    h = vs(2);
+    m = vs(3);
+
+    I_l = -g_l*(v - E_l);
+    I_na = -g_na * (v - E_na) * h * (((1 + exp((v+35)/-7.8))^-1)^3);
+    I_k = -g_k * (v - E_k) * m^4;
+
+    v_prime = ((I_l + I_na + I_k) / C)+I;
+    h_prime = (((1 + (exp((v - theta_h)/sig_h)))^(-1)) - h ) / (30/(exp((v+50)/15) + exp(-(v+50)/16)));
+    m_prime = (((1 + exp((v+28)/-15))^-1) - m) / (7/(exp((v+40)/40) + exp(-(v+ 40)/50)));
+
+    vec = [v_prime; h_prime; m_prime];
+end
+
+function vec = HHv_2D_int(t, vs)
+    global I;
+    E_na = 55; 
+    E_k = -80;
+    C = 1; 
+
+    g_na = 120; 
+    g_k = 100;
+    g_l = 0.51; 
+    E_l = -64.0; 
+
+    theta_h = -55; 
+    sig_h = 7; 
+
+    v = vs(1);
+    h = vs(2);
+    
+    k = 0.43;
+
+    I_l = -g_l*(v - E_l);
+    I_na = -g_na * (v - E_na) * h * (((1 + exp((v+35)/-7.8))^-1)^3);
+    I_k = -g_k * (v - E_k) * ((k - (0.86*h))^4);
+
+    v_prime = ((I_l + I_na + I_k) / C)+I;
+    h_prime = (((1 + (exp((v - theta_h)/sig_h)))^(-1)) - h ) / (30/(exp((v+50)/15) + exp(-(v+50)/16)));
+
+    vec = [v_prime; h_prime];
+end
+
 function vec = HHv_m_inf(t, vs)
     global C;
     global g_na;
@@ -499,6 +566,20 @@ function vec = HHv_exp(t,vs)
     v = vs(1);
     v_th = -60;
     delta_t = 3.48;
+    
+    v_prime = ((g_l * delta_t * exp((v - v_th)/delta_t)) - (g_l * (v - v_l)) + I);
+    
+    vec = [v_prime];
+end
+
+function vec = HHv_exp_int(t,vs)
+    global I;
+    
+    g_l = 0.3;
+    v_l = -70;
+    v = vs(1);
+    v_th = -56;
+    delta_t = 1.48;
     
     v_prime = ((g_l * delta_t * exp((v - v_th)/delta_t)) - (g_l * (v - v_l)) + I);
     
