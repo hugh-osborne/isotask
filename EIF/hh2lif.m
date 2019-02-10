@@ -56,7 +56,7 @@ h_0_int = 0.6;
 m_0_int = 0;
 
 % Input current
-I = 4;
+I = 1;
 
 % v_rest is the resting potential of this neuron
 % User must find the resting potential :
@@ -269,6 +269,8 @@ tspan = 0:timestep:200;
 v_0 = -52.3;
 [t,s] = ode23s(@HHv_exp_int, tspan, [v_0]);
 
+% s = s(:,1) + [];
+
 gen_strip(s);
 hold on;
 
@@ -299,8 +301,8 @@ fclose(revId);
 
 outId = fopen('exp.stat', 'w');
 fprintf(outId, '<Stationary>\n');
-fprintf(outId, '<Quadrilateral><vline>%f %f %f %f</vline><wline>%f %f %f %f</wline></Quadrilateral>\n',-67.615, -67.615, -67.605, -67.605, 0.0, 0.05, 0.05, 0.0);
-fprintf(outId, '<Quadrilateral><vline>%f %f %f %f</vline><wline>%f %f %f %f</wline></Quadrilateral>\n',-55.58, -55.58, -55.56, -55.56, 0.0, 0.05, 0.05, 0.0);
+fprintf(outId, '<Quadrilateral><vline>%f %f %f %f</vline><wline>%f %f %f %f</wline></Quadrilateral>\n',-70.02, -70.02, -69.98, -69.98, 0.0, 0.05, 0.05, 0.0);
+fprintf(outId, '<Quadrilateral><vline>%f %f %f %f</vline><wline>%f %f %f %f</wline></Quadrilateral>\n',-52.4, -52.4, -52.3, -52.3, 0.0, 0.05, 0.05, 0.0);
 fprintf(outId, '</Stationary>\n');
 fclose(outId);
 
