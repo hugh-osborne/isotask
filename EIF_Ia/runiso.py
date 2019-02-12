@@ -56,8 +56,8 @@ if miindmodel.startSimulation() > 0 :
 # change this to change the "angle" of the leg
 # 90 degrees prop_input = [750,700,0,0,0,0,0]
 # 0 degrees prop_input = [900,700,0,0,0,0,0]
-prop_input = [400,0,0,0,0,0,0]
-bg_input = [350,350,350,350,350,350,350]
+prop_input = [0,0,0,0,0,80,80]
+bg_input = [0,0,50,50,50,50,50]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0]
 
@@ -65,7 +65,7 @@ outputs = []
 t = 0.0
 flex_times = [0]
 
-rate = [0,0,90,90,90,90,90]
+rate = [0,0,110,110,110,110,110]
 for ft in flex_times:
     start_flexion = [1,1,1,1,1,1,1]
     start_flexion = [x+ft for x in start_flexion]

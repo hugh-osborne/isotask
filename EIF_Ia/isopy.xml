@@ -1,12 +1,11 @@
 <Simulation>
 <WeightType>DelayedConnection</WeightType>
 <Algorithms>
-<Algorithm type="MeshAlgorithm" name="E" tau_refractive="0.0025" modelfile="exp.model" >
-<TimeStep>0.0001</TimeStep>
+<Algorithm type="MeshAlgorithm" name="E" tau_refractive="0.0017" modelfile="exp.model" >
+<TimeStep>0.001</TimeStep>
 <MatrixFile>exp_0.1_0_0_0_.mat</MatrixFile>
 <MatrixFile>exp_-0.1_0_0_0_.mat</MatrixFile>
 <MatrixFile>exp_-0.052_0_0_0_.mat</MatrixFile>
-<MatrixFile>exp_0.052_0_0_0_.mat</MatrixFile>
 </Algorithm>
 </Algorithms>
 <Nodes>
@@ -22,19 +21,12 @@
 <Node algorithm="E" name="MN_BF" type="NEUTRAL" />
 </Nodes>
 <Connections>
-<Connection In="INT_AG" Out="MN_RF">70 -0.052 0.002</Connection>
-<Connection In="INT_AG" Out="MN_VL">70 -0.052 0.002</Connection>
-<Connection In="INT_AG" Out="MN_VM">70 -0.052 0.002</Connection>
+<Connection In="INT_AG" Out="MN_ST">200 -0.1 0.002</Connection>
+<Connection In="INT_AG" Out="MN_BF">200 -0.1 0.002</Connection>
 
-<Connection In="INT_ANTAG" Out="MN_ST">70 -0.052 0.002</Connection>
-<Connection In="INT_ANTAG" Out="MN_BF">70 -0.052 0.002</Connection>
-
-<Connection In="INT_ANTAG" Out="MN_RF">70 0.052 0.002</Connection>
-<Connection In="INT_ANTAG" Out="MN_VL">70 0.052 0.002</Connection>
-<Connection In="INT_ANTAG" Out="MN_VM">70 0.052 0.002</Connection>
-
-<Connection In="INT_AG" Out="MN_ST">70 0.052 0.002</Connection>
-<Connection In="INT_AG" Out="MN_BF">70 0.052 0.002</Connection>
+<Connection In="INT_ANTAG" Out="MN_RF">200 -0.1 0.002</Connection>
+<Connection In="INT_ANTAG" Out="MN_VL">200 -0.1 0.002</Connection>
+<Connection In="INT_ANTAG" Out="MN_VM">200 -0.1 0.002</Connection>
 
 <IncomingConnection Node="INT_AG">100 0.1 0</IncomingConnection>
 <IncomingConnection Node="INT_ANTAG">100 0.1 0</IncomingConnection>
