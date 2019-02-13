@@ -56,8 +56,8 @@ if miindmodel.startSimulation() > 0 :
 # change this to change the "angle" of the leg
 # 90 degrees prop_input = [750,700,0,0,0,0,0]
 # 0 degrees prop_input = [900,700,0,0,0,0,0]
-prop_input = [400,0,0,0,0,0,0]
-bg_input = [350,350,350,350,350,350,350]
+prop_input = [0,0,0,0,0,0,0]
+bg_input = [400,400,360,360,360,360,360]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0]
 
@@ -65,7 +65,7 @@ outputs = []
 t = 0.0
 flex_times = [0]
 
-rate = [0,0,90,90,90,90,90]
+rate = [90.0,90.0,90.0,90.0,90.0,90.0,90.0]
 for ft in flex_times:
     start_flexion = [1,1,1,1,1,1,1]
     start_flexion = [x+ft for x in start_flexion]
@@ -102,7 +102,7 @@ for ft in flex_times:
 
         node_input = list( map(add, supra_input, prop_input) )
         node_input = numpy.array(list( map(add, node_input, bg_input)))
-        #node_input += numpy.abs(numpy.random.normal(5+(50*(supra_input[5]/11000)),1,len(node_input))*(100+(900*(supra_input[5]/11000))))
+        # node_input = numpy.array(list( map(add, node_input,numpy.abs(numpy.random.normal(10,10,len(node_input))))))
         #node_input = supra_input
         # Miind XML set up to only return the output of MNs
         o = miindmodel.evolveSingleStep(node_input.tolist())
@@ -150,6 +150,7 @@ plt.subplot(514)
 plt.plot((res_list[3].tolist())[0])
 plt.subplot(515)
 plt.plot((res_list[4].tolist())[0])
+plt.plot((res_list[0].tolist())[0])
 
 plt.show()
 
@@ -167,29 +168,34 @@ V = numpy.matmul(H,W)
 
 plt.style.use('seaborn')
 
-for i in range(comps):
-    plt.figure()
-    axes = plt.gca()
-    axes.set_ylim([0,6.0])
-    plt.bar(['RF','VL','VM','ST','BF'],W[i,:].tolist()[0])
-    plt.title("NMF Coefficient " + str(i+1) + " (950Hz / 9.5nA)")
-    plt.show()
+plt.figure()
+axes = plt.gca()
+axes.set_ylim([0,6.0])
+plt.bar(['RF','VL','VM','ST','BF'],W[0,:].tolist()[0])
+plt.title("NMF Coefficient " + str(0+1) + " (400Hz / 4nA)")
+plt.show()
 
+plt.figure()
+axes = plt.gca()
+axes.set_ylim([0,5.0])
+plt.bar(['RF','VL','VM','ST','BF'],W[1,:].tolist()[0])
+plt.title("NMF Coefficient " + str(1+1) + " (400Hz / 4nA)")
+plt.show()
 
 plt.figure()
 plt.xlabel('Time (ms)')
 axes = plt.gca()
 axes.set_ylim([0,0.2])
 plt.plot(H[:,0])
-plt.title("NMF Factor " + str(1) + " (950Hz / 9.5nA)")
+plt.title("NMF Factor " + str(1) + " (400Hz / 4nA)")
 plt.show()
 
 plt.figure()
 plt.xlabel('Time (ms)')
 axes = plt.gca()
-axes.set_ylim([0,0.1])
+axes.set_ylim([0,0.12])
 plt.plot(H[:,1])
-plt.title("NMF Factor " + str(2) + " (950Hz / 9.5nA)")
+plt.title("NMF Factor " + str(2) + " (400Hz / 4nA)")
 plt.show()
 
 # pca = PCA(n_components=2)
