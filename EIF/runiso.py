@@ -37,13 +37,15 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     return y
 
 number_of_nodes = 1
-simulation_length = 7 #s
-miindmodel = miind.MiindModel(number_of_nodes, simulation_length)
+miindmodel = miind.MiindModel(number_of_nodes)
 
 miindmodel.init([])
 
 timestep = miindmodel.getTimeStep()
 print('Timestep from XML : {}'.format(timestep))
+
+simulation_length = miindmodel.getSimulationLength() #s
+print('Simulation Length (s) from XML : {}'.format(simulation_length))
 
 # For MPI child processes, startSimulation runs the full simulation loop
 # and so will not return until MPI process 0 has completed. At that point,
@@ -51,114 +53,108 @@ print('Timestep from XML : {}'.format(timestep))
 if miindmodel.startSimulation() > 0 :
     quit()
 
-# each MN and associated INT gets the same afferent Ia input
-# afferent input represents the degree of stretch of each muscle
-# change this to change the "angle" of the leg
-# 90 degrees prop_input = [750,700,0,0,0,0,0]
-# 0 degrees prop_input = [900,700,0,0,0,0,0]
-prop_input = [0,0,0,0,0,0,0]
-bg_input = [400,400,360,360,360,360,360]
+# MAX 250
+# MIN 50
+prop_input = [50,0,0,0,0,0,0]
+bg_input = [500,500,320,320,320,320,320]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0]
 
 outputs = []
 t = 0.0
-flex_times = [0]
 
-rate = [90.0,90.0,90.0,90.0,90.0,90.0,90.0]
-for ft in flex_times:
-    start_flexion = [1,1,1,1,1,1,1]
-    start_flexion = [x+ft for x in start_flexion]
-    # INTERESTING! : with a flexion ramp of < ~0.1 (100ms), the double peak in the second synergy
-    # disappears
-    up_ramp = [0.5,0.5,0.5,0.5,0.5,0.5,0.5]
-    down_ramp = [0.5,0.5,0.5,0.5,0.5,0.5,0.5]
-    end_flexion = [5.5,5.5,5.5,5.5,5.5,5.5,5.5,5.5,5.5]
-    end_flexion = [x+ft for x in end_flexion]
-    # Differences in the maximum rate of each supraspinal input indicates which
-    # which muscles are the agonists + variation among muscle activation
-    #rate = [0,0,8000,8500,9000,9500,10000]
-    # rate_var = [0,0,100,-150,200,-250,300]
-    # rate = list( map(add, rate, rate_var) )
-    #rate = list( map(add, rate, prop_input) )
+rate = [0.0,0.0,80.0,80.0,80.0,80.0,80.0]
+start_flexion = (numpy.ones(7)*3).tolist()
+up_ramp = [0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+down_ramp = [0.5,0.5,0.5,0.5,0.5,0.5,0.5]
+end_flexion = (numpy.ones(7)*6).tolist()
+# Differences in the maximum rate of each supraspinal input indicates which
+# which muscles are the agonists + variation among muscle activation
+#rate = [0,0,8000,8500,9000,9500,10000]
+# rate_var = [0,0,100,-150,200,-250,300]
+# rate = list( map(add, rate, rate_var) )
+#rate = list( map(add, rate, prop_input) )
 
-    for z in range(int(7/timestep)):
-        t += timestep
+for z in range(int(simulation_length/timestep)):
+    t += timestep
 
-        for i in range(7):
-        	if(t > start_flexion[i]):
-        	    if(t > end_flexion[i]):
-        	        if(t < end_flexion[i]+down_ramp[i]):
-        	            supra_input[i] = (1.0-((t - end_flexion[i]) / (down_ramp[i]) ) ) * rate[i]
-        	        else:
-        	            supra_input[i] = 0
-        	    else:
-        	        if(t < start_flexion[i]+up_ramp[i]):
-        	            supra_input[i] = ((t - start_flexion[i]) / (up_ramp[i]) ) * rate[i]
-        	        else:
-        	            supra_input[i] = rate[i]
-        	else:
-        	    supra_input[i] = 0
+    for i in range(7):
+        if(t > start_flexion[i]):
+            if(t > end_flexion[i]):
+                if(t < end_flexion[i]+down_ramp[i]):
+                    supra_input[i] = (1.0-((t - end_flexion[i]) / (down_ramp[i]) ) ) * rate[i]
+                else:
+                    supra_input[i] = 0
+            else:
+                if(t < start_flexion[i]+up_ramp[i]):
+                    supra_input[i] = ((t - start_flexion[i]) / (up_ramp[i]) ) * rate[i]
+                else:
+                    supra_input[i] = rate[i]
+        else:
+            supra_input[i] = 0
 
-        node_input = list( map(add, supra_input, prop_input) )
-        node_input = numpy.array(list( map(add, node_input, bg_input)))
-        # node_input = numpy.array(list( map(add, node_input,numpy.abs(numpy.random.normal(10,10,len(node_input))))))
-        #node_input = supra_input
-        # Miind XML set up to only return the output of MNs
-        o = miindmodel.evolveSingleStep(node_input.tolist())
-        # o += o * (numpy.random.normal(0,1,len(o)) * 20 / 100)
-        if(t > 500*timestep):
-            outputs.append(o)
+    node_input = list( map(add, supra_input, prop_input) )
+    node_input = numpy.array(list( map(add, node_input, bg_input)))
+    o = miindmodel.evolveSingleStep(node_input.tolist())
+    if(t > 0.5):
+        outputs.append(o)
 
 miindmodel.endSimulation()
 
 res_list = numpy.matrix(outputs)
 res_list = numpy.transpose(res_list)
 
+for i in range(5):
+    temp = res_list[i].tolist()[0]
+    temp = numpy.convolve(temp, numpy.ones(10000)/10000, mode='same')
+    res_list[i][0] = numpy.transpose(temp)
+
+bwah = res_list[:,15000:70000:6]
+
 plt.figure()
 plt.subplot(511)
-plt.plot((res_list[0].tolist())[0])
+plt.plot((bwah[0].tolist())[0])
 plt.title("Firing Rates")
 plt.subplot(512)
-plt.plot((res_list[1].tolist())[0])
+plt.plot((bwah[1].tolist())[0])
 plt.subplot(513)
-plt.plot((res_list[2].tolist())[0])
+plt.plot((bwah[2].tolist())[0])
 plt.subplot(514)
-plt.plot((res_list[3].tolist())[0])
+plt.plot((bwah[3].tolist())[0])
 plt.subplot(515)
-plt.plot((res_list[4].tolist())[0])
+plt.plot((bwah[4].tolist())[0])
 
 plt.show()
 
 # normalise values per muscle
 for i in range(5):
-    res_list[i] += numpy.random.normal(0,1,res_list[i].shape)*0
-    xmax, xmin = res_list[i].max(), res_list[i].min()
-    res_list[i] = res_list[i]/xmax
+    bwah[i] += numpy.random.normal(0,1,bwah[i].shape)*0
+    xmax, xmin = bwah[i].max(), bwah[i].min()
+    bwah[i] = bwah[i]/xmax
 
 # res_list = numpy.append(res_list, numpy.matrix([numpy.zeros(50),numpy.zeros(50),numpy.zeros(50),numpy.zeros(50),numpy.zeros(50)]), axis=1)
 
 plt.figure()
 plt.subplot(511)
-plt.plot((res_list[0].tolist())[0])
+plt.plot((bwah[0].tolist())[0])
 plt.title("Firing Rates")
 plt.subplot(512)
-plt.plot((res_list[1].tolist())[0])
+plt.plot((bwah[1].tolist())[0])
 plt.subplot(513)
-plt.plot((res_list[2].tolist())[0])
+plt.plot((bwah[2].tolist())[0])
 plt.subplot(514)
-plt.plot((res_list[3].tolist())[0])
+plt.plot((bwah[3].tolist())[0])
 plt.subplot(515)
-plt.plot((res_list[4].tolist())[0])
-plt.plot((res_list[0].tolist())[0])
+plt.plot((bwah[4].tolist())[0])
+plt.plot((bwah[0].tolist())[0])
 
 plt.show()
 
-res_list = numpy.absolute(res_list)
+bwah = numpy.absolute(bwah)
 
 comps = 2
 
-nmf = nimfa.Nmf(res_list, seed="nndsvd", rank=comps, max_iter=500)
+nmf = nimfa.Nmf(bwah, seed="nndsvd", rank=comps, max_iter=500)
 nmf_fit = nmf()
 
 W = nmf_fit.basis().transpose()
@@ -197,14 +193,3 @@ axes.set_ylim([0,0.12])
 plt.plot(H[:,1])
 plt.title("NMF Factor " + str(2) + " (400Hz / 4nA)")
 plt.show()
-
-# pca = PCA(n_components=2)
-# pca.fit(res_list[2000:7000])
-#
-# print(pca.explained_variance_ratio_)
-# print(pca.components_)
-#
-# plt.figure()
-# plt.plot(np_rg_e.tolist()[2000:7000],np_rg_f.tolist()[2000:7000], '.')
-# plt.title("time points")
-# plt.show()

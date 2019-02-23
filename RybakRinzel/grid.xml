@@ -9,7 +9,7 @@
 <TimeStep>0.000001</TimeStep>
 </Algorithm>
 <Algorithm type="RateFunctor" name="MLR_1">
-<expression>t > 0.001 ? (t > 0.03 ? 10000 : 40000 ) : 10000</expression>
+<expression>t > 0.01 ? (t > 0.04 ? 10000 : 40000 ) : 10000</expression>
 </Algorithm>
 <Algorithm type="RateFunctor" name="MLR_2">
 <expression>0</expression>
@@ -24,8 +24,8 @@
 <Connections>
 <Connection In="MLR_E" Out="S" type="input" num_connections="1" efficacy="0.01" delay="0.0" conductance="0.0"/>
 <Connection In="INHIB" Out="S" type="input" num_connections="1" efficacy="-0.01" delay="0.0" conductance="0.0"/>
-<Connection In="S" Out="D" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
-<Connection In="D" Out="S" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.8"/>
+<Connection In="S" Out="D" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.5"/>
+<Connection In="D" Out="S" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.5"/>
 </Connections>
 <Reporting>
 	<!--<Density node="RG_E" t_start="0.0" t_end="6.0" t_interval="0.001" />

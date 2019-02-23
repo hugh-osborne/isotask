@@ -36,6 +36,9 @@
 <Connection In="INT_AG" Out="MN_ST">70 0.052 0.002</Connection>
 <Connection In="INT_AG" Out="MN_BF">70 0.052 0.002</Connection>
 
+<!--<Connection In="INT_AG" Out="INT_AG">200 -0.052 0.001</Connection>
+<Connection In="INT_ANTAG" Out="INT_ANTAG">200 -0.052 0.001</Connection>-->
+
 <IncomingConnection Node="INT_AG">100 0.1 0</IncomingConnection>
 <IncomingConnection Node="INT_ANTAG">100 0.1 0</IncomingConnection>
 <IncomingConnection Node="MN_RF">100 0.1 0</IncomingConnection>
@@ -51,10 +54,6 @@
 <OutgoingConnection Node="MN_BF"/>
 </Connections>
 <Reporting>
-<Display node="MN_RF" />
-<Rate node="MN_RF" t_interval="0.0001" />
-<Rate node="MN_ST" t_interval="0.0001" />
-<Rate node="INT_ANTAG" t_interval="0.0001" />
 </Reporting>
 <SimulationIO>
 <SimulationName>iso</SimulationName>
@@ -76,10 +75,10 @@
 <SimulationRunParameter>
 <max_iter>1000000</max_iter>
 <t_begin>0</t_begin>
-<t_end>7.0</t_end>
-<t_report>0.1</t_report>
-<t_state_report>0.1</t_state_report>
-<t_step>0.001</t_step>
+<t_end>9.0</t_end>
+<t_report>0.0001</t_report>
+<t_state_report>0.0001</t_state_report>
+<t_step>0.0001</t_step>
 <name_log>iso.log</name_log>
 <master_steps>40</master_steps>
 </SimulationRunParameter>
