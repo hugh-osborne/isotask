@@ -242,62 +242,68 @@ def synergy_analysis(directory):
     for file in os.listdir(directory):
         if file.endswith(".csv"):
             files.append(file)
+    num_actions = 1
     for file in files:
         wholefile=np.genfromtxt(os.path.join(directory, file),delimiter=',',skip_header=1)
-        datafile1=datafile_generator(wholefile)[18000:38000]
-        # plt.figure()
-        # plt.subplot(911)
-        for column in range(0,datafile1.shape[1]):
-            datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
-            datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
-            datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((2000,))/2000, mode='same')
-            datafile1[:,column]=amplitude_normalization(datafile1[:,column])
+        df1=datafile_generator(wholefile)
+        for index in range(num_actions):
+            datafile1 = df1[18000:38000]
+            # plt.figure()
+            # plt.subplot(511)
+            for column in range(0,datafile1.shape[1]):
+                datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
+                datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
+                datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((3000,))/3000, mode='same')
+                datafile1[:,column]=amplitude_normalization(datafile1[:,column])
 
-            # plt.subplot(911 + column)
-            # plt.plot(datafile1[:,column].tolist())
+                # plt.subplot(511 + column)
+                # plt.plot(datafile1[:,column].tolist())
 
-            # datafile1[0:1000,column] = np.zeros(1000)
-            # datafile1[200000:20000,column] = np.zeros(1000)
-        stuff = np.append(stuff, datafile1, axis=1)
-        print(stuff.shape)
-        a,b,c=NMF_calculator(datafile1,rank=2)
-        #
-        # index = np.arange(5)
-        # names=("RF","VL","VM","ST","BF")
-        # percentage = ("0","25","50","75","100")
-        #
-        #
-        # a = np.transpose(a)
-        # print(len(a[0].tolist()))
-        # print(b.shape)
-        # print(c)
-        # plt.subplot(916)
-        # plt.bar(index,np.ravel(c[0].tolist()[0]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-        # plt.subplot(917)
-        # plt.bar(index,np.ravel(c[1].tolist()[0]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-        # plt.subplot(918)
-        # plt.plot(a[0].tolist())
-        # plt.subplot(919)
-        # plt.plot(a[1].tolist())
-        # plt.show()
-        #
-        # a = np.transpose(a)
+                # datafile1[0:1000,column] = np.zeros(1000)
+                # datafile1[200000:20000,column] = np.zeros(1000)
+            stuff = np.append(stuff, datafile1, axis=1)
+            print(stuff.shape)
+            a,b,c=NMF_calculator(datafile1,rank=2)
+            #
+            index = np.arange(5)
+            names=("RF","VL","VM","ST","BF")
+            percentage = ("0","25","50","75","100")
 
-        # if vector.shape[0] != amplitude_normalization(a).shape[0]:
-        #     continue
-        vector=np.append(vector,a,axis=1)
-        print(vector.shape)
-        # vector=amplitude_normalization(vector)
-        vaf_muscle=np.append(vaf_muscle,b,axis=0)
-        print(vaf_muscle.shape)
-        synergy_coeff=np.append(synergy_coeff,c,axis=0)
-        print(synergy_coeff.shape)
+            # plt.figure()
+            #
+            #
+            # #
+            # a = np.transpose(a)
+            # print(len(a[0].tolist()))
+            # print(b.shape)
+            # print(c)
+            # plt.subplot(411)
+            # plt.bar(index,np.ravel(c[0].tolist()[0]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+            # plt.subplot(412)
+            # plt.bar(index,np.ravel(c[1].tolist()[0]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+            # plt.subplot(413)
+            # plt.plot(a[0].tolist())
+            # plt.subplot(414)
+            # plt.plot(a[1].tolist())
+            # plt.show()
+            # #
+            # a = np.transpose(a)
+
+            # if vector.shape[0] != amplitude_normalization(a).shape[0]:
+            #     continue
+            vector=np.append(vector,a,axis=1)
+            print(vector.shape)
+            # vector=amplitude_normalization(vector)
+            vaf_muscle=np.append(vaf_muscle,b,axis=0)
+            print(vaf_muscle.shape)
+            synergy_coeff=np.append(synergy_coeff,c,axis=0)
+            print(synergy_coeff.shape)
     vector=np.transpose(vector)
     stuff=np.transpose(stuff)
-    synergy1_vector_combinations = list(itertools.combinations(vector[0:30:2,:],2))
-    synergy2_vector_combinations = list(itertools.combinations(vector[1:30:2,:],2))
-    synergy1_coeff_combinations = list(itertools.combinations(synergy_coeff[0:30:2],2))
-    synergy2_coeff_combinations = list(itertools.combinations(synergy_coeff[1:30:2],2))
+    synergy1_vector_combinations = list(itertools.combinations(vector[0:num_actions*30:2,:],2))
+    synergy2_vector_combinations = list(itertools.combinations(vector[1:num_actions*30:2,:],2))
+    synergy1_coeff_combinations = list(itertools.combinations(synergy_coeff[0:num_actions*30:2],2))
+    synergy2_coeff_combinations = list(itertools.combinations(synergy_coeff[1:num_actions*30:2],2))
     """
     for combination in synergy1_vector_combinations:
           synergy1_vector_correlation.append(stats.pearsonr(combinaa,b,c=NMF_calculator(datafile1,rank=2)tion[0],combination[1]))
@@ -352,7 +358,10 @@ directory20_1=select_directory()
 directory60_1=select_directory()
 directory90_1=select_directory()
 
-directory0_2=select_directory()
+directory0_2=select_directory()        average_muscle_correlation[2,muscle]=np.mean(muscle_correlation60[muscle:-1:5,0])
+for muscle in range(0,5):
+        average_muscle_correlation[3,muscle]=np.mean(muscle_correlation90[muscle:-1:5,0])
+plt.bar(index,np.ravel(synergy_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 directory20_2=select_directory()
 directory60_2=select_directory()
 directory90_2=select_directory()
@@ -404,7 +413,7 @@ for muscle in range(0,5):
 plt.bar(index,np.ravel(synergy_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 
 """
-vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1=synergy_analysis(directory=directory90_1)
+vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1=synergy_analysis(directory=directory0_1)
 # vector20_1,vaf_muscle20_1,synergy_coeff20_1,synergy1_vector_correlation20_1,synergy2_vector_correlation20_1,synergy1_coeff_correlation20_1,synergy2_coeff_correlation20_1=synergy_analysis(directory=directory20_1)
 # vector60_1,vaf_muscle60_1,synergy_coeff60_1,synergy1_vector_correlation60_1,synergy2_vector_correlation60_1,synergy1_coeff_correlation60_1,synergy2_coeff_correlation60_1=synergy_analysis(directory=directory60_1)
 # vector90_1,vaf_muscle90_1,synergy_coeff90_1,synergy1_vector_correlation90_1,synergy2_vector_correlation90_1,synergy1_coeff_correlation90_1,synergy2_coeff_correlation90_1=synergy_analysis(directory=directory90_1)
@@ -690,7 +699,7 @@ names=("RF","VL","VM","ST","BF")
 # plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,0]),y=range(1,15),c=labels.astype(np.float),marker="o",  edgecolor='k')
 # plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,1]),y=range(1,15),c=labels.astype(np.float),marker="v", edgecolor='k')
 # plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,2]),y=range(1,15),c=labels.astype(np.float),marker="s", edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,3]),y=range(1,15),c=labels.astype(np.float),marker="*", edgecolor='k')
+# plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,3]),y=range(1,15),c=labels.astyp0e(np.float),marker="*", edgecolor='k')
 # plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,4]),y=range(1,15),c=labels.astype(np.float),marker="p", edgecolor='k')
 # labels = kmeans.predict(synergy_coeff0_1[0:30:2])
 
@@ -728,37 +737,33 @@ average_synergy2_stuff0_1=np.zeros([1,20000])
 average_synergy3_stuff0_1=np.zeros([1,20000])
 average_synergy4_stuff0_1=np.zeros([1,20000])
 average_synergy5_stuff0_1=np.zeros([1,20000])
-average_stuff0_1=np.zeros([0,9000])
+average_stuff0_1=np.zeros([0,18000])
 smooth = 1
 for s in range(0,20000):
     average_synergy1_stuff0_1[0,s]=np.mean(stuff0_1[0:70:5,s])
-average_synergy1_stuff0_1 = amplitude_normalization(average_synergy1_stuff0_1)
+# average_synergy1_stuff0_1 = amplitude_normalization(average_synergy1_stuff0_1)
 average_synergy1_stuff0_1[0,:] = np.convolve(average_synergy1_stuff0_1[0,:], np.ones((smooth,))/smooth, mode='same')
-average_synergy1_stuff0_1 = amplitude_normalization(average_synergy1_stuff0_1[:,1000:19000:2])
-average_stuff0_1 = np.append(average_stuff0_1, average_synergy1_stuff0_1, axis=0)
-average_stuff0_1 = np.append(average_stuff0_1, average_synergy1_stuff0_1, axis=0)
-average_stuff0_1 = np.append(average_stuff0_1, average_synergy1_stuff0_1, axis=0)
-# for s in range(0,20000):
-#     average_synergy2_stuff0_1[0,s]=np.mean(stuff0_1[1:70:5,s])
+average_stuff0_1 = np.append(average_stuff0_1, average_synergy1_stuff0_1[:,1000:19000], axis=0)
+for s in range(0,20000):
+    average_synergy2_stuff0_1[0,s]=np.mean(stuff0_1[1:70:5,s])
 # average_synergy2_stuff0_1 = amplitude_normalization(average_synergy2_stuff0_1)
-# average_synergy2_stuff0_1[0,:] = np.convolve(average_synergy2_stuff0_1[0,:], np.ones((smooth,))/smooth, mode='same')
-# average_stuff0_1 = np.append(average_stuff0_1, average_synergy2_stuff0_1[:,1000:19000], axis=0)
-# for s in range(0,20000):
-#     average_synergy3_stuff0_1[0,s]=np.mean(stuff0_1[2:70:5,s])
+average_synergy2_stuff0_1[0,:] = np.convolve(average_synergy2_stuff0_1[0,:], np.ones((smooth,))/smooth, mode='same')
+average_stuff0_1 = np.append(average_stuff0_1, average_synergy2_stuff0_1[:,1000:19000], axis=0)
+for s in range(0,20000):
+    average_synergy3_stuff0_1[0,s]=np.mean(stuff0_1[2:70:5,s])
 # average_synergy3_stuff0_1 = amplitude_normalization(average_synergy3_stuff0_1)
-# average_synergy3_stuff0_1[0,:] = np.convolve(average_synergy3_stuff0_1[0,:], np.ones((smooth,))/smooth, mode='same')
-# average_stuff0_1 = np.append(average_stuff0_1, average_synergy3_stuff0_1[:,1000:19000], axis=0)
+average_synergy3_stuff0_1[0,:] = np.convolve(average_synergy3_stuff0_1[0,:], np.ones((smooth,))/smooth, mode='same')
+average_stuff0_1 = np.append(average_stuff0_1, average_synergy3_stuff0_1[:,1000:19000], axis=0)
 for s in range(0,20000):
     average_synergy4_stuff0_1[0,s]=np.mean(stuff0_1[3:70:5,s])
-average_synergy4_stuff0_1 = amplitude_normalization(average_synergy4_stuff0_1)
+# average_synergy4_stuff0_1 = amplitude_normalization(average_synergy4_stuff0_1)
 average_synergy4_stuff0_1[0,:] = np.convolve(average_synergy4_stuff0_1[0,:], np.ones((smooth,))/smooth, mode='same')
-average_synergy4_stuff0_1 = amplitude_normalization(average_synergy4_stuff0_1[:,1000:19000:2])
-average_stuff0_1 = np.append(average_stuff0_1, average_synergy4_stuff0_1, axis=0)
+average_stuff0_1 = np.append(average_stuff0_1, average_synergy4_stuff0_1[:,1000:19000], axis=0)
 for s in range(0,20000):
     average_synergy5_stuff0_1[0,s]=np.mean(stuff0_1[4:70:5,s])
-average_synergy5_stuff0_1 = amplitude_normalization(average_synergy5_stuff0_1)
+# average_synergy5_stuff0_1 = amplitude_normalization(average_synergy5_stuff0_1)
 average_synergy5_stuff0_1[0,:] = np.convolve(average_synergy5_stuff0_1[0,:], np.ones((smooth,))/smooth, mode='same')
-average_stuff0_1 = np.append(average_stuff0_1, average_synergy5_stuff0_1[:,1000:19000:2], axis=0)
+average_stuff0_1 = np.append(average_stuff0_1, average_synergy5_stuff0_1[:,1000:19000], axis=0)
 
 
 
@@ -883,26 +888,27 @@ plt.show()
 # plt.show()
 
 plt.figure()
-plt.subplot(911)
+plt.subplot(511)
 plt.plot(average_stuff0_1[0])
-plt.subplot(912)
+plt.subplot(512)
 plt.plot(average_stuff0_1[1])
-plt.subplot(913)
+plt.subplot(513)
 plt.plot(average_stuff0_1[2])
-plt.subplot(914)
+plt.subplot(514)
 plt.plot(average_stuff0_1[3])
 plt.plot(average_stuff0_1[0])
-plt.subplot(915)
+plt.subplot(515)
 plt.plot(average_stuff0_1[4])
 plt.plot(average_stuff0_1[0])
-plt.subplot(916)
+plt.figure()
+plt.subplot(411)
 a = np.transpose(a)
 plt.bar(index,np.ravel(a[0]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-plt.subplot(917)
+plt.subplot(412)
 plt.bar(index,np.ravel(a[1]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-plt.subplot(918)
+plt.subplot(413)
 plt.plot(c[0].tolist()[0])
-plt.subplot(919)
+plt.subplot(414)
 plt.plot(c[1].tolist()[0])
 # plt.plot(vector20_1[0])
 # plt.plot(vector20_1[1])
@@ -952,7 +958,14 @@ plt.bar(index,np.ravel(average_synergy1_coeff0_1),tick_label=("RF","VL","VM","ST
 
 plt.show()
 
+plt.figure()
 plt.bar(index,np.ravel(average_synergy2_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+# plt.bar(index,np.ravel(average_synergy2_coeff20_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+# plt.bar(index,np.ravel(average_synergy2_coeff60_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+# plt.bar(index,np.ravel(average_synergy2_coeff90_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+
+# plt.figure()
+# plt.bar(index,np.ravel(average_synergy3_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 # plt.bar(index,np.ravel(average_synergy2_coeff20_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 # plt.bar(index,np.ravel(average_synergy2_coeff60_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 # plt.bar(index,np.ravel(average_synergy2_coeff90_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))

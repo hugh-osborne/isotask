@@ -3,13 +3,13 @@
 <WeightType>CustomConnectionParameters</WeightType>
 <Algorithms>
 <Algorithm type="GridSomaDendriteAlgorithm" name="SOMA" modelfile="soma.model" tau_refractive="0.0" transformfile="soma_0_0_0_0_.tmat" start_v="-0.5" start_w="0.0000001" >
-<TimeStep>0.000001</TimeStep>
+<TimeStep>0.00001</TimeStep>
 </Algorithm>
 <Algorithm type="GridSomaDendriteAlgorithm" name="DENDRITE" modelfile="dendrite.model" tau_refractive="0.0" transformfile="dendrite_0_0_0_0_.tmat" start_v="-0.5" start_w="0.0000001" >
-<TimeStep>0.000001</TimeStep>
+<TimeStep>0.00001</TimeStep>
 </Algorithm>
 <Algorithm type="RateFunctor" name="MLR_1">
-<expression>t > 0.01 ? (t > 0.04 ? 10000 : 40000 ) : 10000</expression>
+<expression>t > 0.01 ? (t > 0.04 ? 10 : 45 ) : 10</expression>
 </Algorithm>
 <Algorithm type="RateFunctor" name="MLR_2">
 <expression>0</expression>
@@ -22,8 +22,8 @@
 <Node algorithm="MLR_2" name="INHIB" type="NEUTRAL" />
 </Nodes>
 <Connections>
-<Connection In="MLR_E" Out="S" type="input" num_connections="1" efficacy="0.01" delay="0.0" conductance="0.0"/>
-<Connection In="INHIB" Out="S" type="input" num_connections="1" efficacy="-0.01" delay="0.0" conductance="0.0"/>
+<Connection In="MLR_E" Out="S" type="input" num_connections="1000" efficacy="0.01" delay="0.0" conductance="0.0"/>
+<Connection In="INHIB" Out="S" type="input" num_connections="1000" efficacy="-0.01" delay="0.0" conductance="0.0"/>
 <Connection In="S" Out="D" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.5"/>
 <Connection In="D" Out="S" type="SomaDendrite" num_connections="1000" efficacy="1.0" delay="0.0" conductance="0.5"/>
 </Connections>
@@ -56,10 +56,10 @@
 <max_iter>1000000</max_iter>
 <t_begin>0</t_begin>
 <t_end>TIME_END</t_end>
-<t_report>0.00005</t_report>
+<t_report>0.00002</t_report>
 <master_steps>10</master_steps>
-<t_state_report>0.00005</t_state_report>
-<t_step>0.00005</t_step>
+<t_state_report>0.00002</t_state_report>
+<t_step>0.00002</t_step>
 <name_log>cond.log</name_log>
 </SimulationRunParameter>
 </Simulation>
