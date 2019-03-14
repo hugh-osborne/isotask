@@ -4,6 +4,8 @@
 
 import pylab
 import numpy
+import matplotlib
+matplotlib.use('TkAgg')
 import matplotlib.pyplot as plt
 import imp
 import datetime
@@ -54,35 +56,27 @@ if miindmodel.startSimulation() > 0 :
     quit()
 
 # For Agonist/Antagonist relationship only
-# prop_input = [a,b,c,d,0,0,0,0,0]
-# bg_input = [500,500,500,500,310,310,310,310,310]
-#  0 degrees : a = 0 ; b,c,d = 200
-# 90 degrees : a = 0 ; b,c,d = 50
+# bg_input = [310,310,310,310,310,310,310,310,310]
+#  0 degrees : prop_input = [190,440,440,440,0,0,0,0,0]
+# 90 degrees : prop_input = [190,240,240,240,0,0,0,0,0]
 
 # For RF Flexor Bias
-# prop_input = [a,b,c,d,0,0,0,0,0]
-# bg_input = [500,500,500,0,310,310,310,310,310]
-# To ignore Ag/Antag, a,b,c = 0
-# Change d to alter the amount of RF bias
-#  0 degrees : d = 450
-# 90 degrees : d = 0
+# bg_input = [310,310,310,310,310,310,310,310,310]
+#  0 degrees : prop_input = [190,190,190,0,0,0,0,0,0]
+# 90 degrees : prop_input = [190,190,190,170,0,0,0,0,0]
 
 # For ST Extensor Bias
-# prop_input = [a,b,c,d,0,0,0,0,0]
-# bg_input = [500,500,0,500,310,310,310,310,310]
-# To ignore Ag/Antag, a,b,d = 0
-# Change d to alter the amount of ST bias
-#  0 degrees : c = 400
-# 90 degrees : c = 0
+# bg_input = [310,310,310,310,310,310,310,310,310]
+#  0 degrees : prop_input = [190,190,0,190,0,0,0,0,0]
+# 90 degrees : prop_input = [190,190,170,190,0,0,0,0,0]
 
 # Mix of everything
-# prop_input = [a,b,c,d,0,0,0,0,0]
-# bg_input = [500,500,0,0,310,310,310,310,310]
-#  0 degrees : a = 0; b = 200; c = 500; d = 250
-# 90 degrees : a = 0; b = 50 ; c = 500; d = 0
+# bg_input = [310,310,310,310,310,310,310,310,310]
+#  0 degrees : prop_input = [190,390,190,0,0,0,0,0,0]
+# 90 degrees : prop_input = [190,240,190,0,0,0,0,0,0]
 
-prop_input = [0,50,500,0,0,0,0,0,0]
-bg_input = [500,500,0,0,310,310,310,310,310]
+prop_input = [190,240,240,240,0,0,0,0,0]
+bg_input = [310,310,310,310,310,310,310,310,310]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0,0,0]
 
@@ -188,34 +182,56 @@ H = nmf_fit.coef().transpose()
 
 V = numpy.matmul(H,W)
 
-plt.style.use('seaborn')
+fig, (ax1, ax2, ax3, ax4) = plt.subplots(1,4,figsize=(8,5))
+fig.tight_layout()
+fig.subplots_adjust(top=0.8)
+fig.set_size_inches(18, 4.5)
 
-plt.figure()
-axes = plt.gca()
-axes.set_ylim([0,6.0])
-plt.bar(['RF','VL','VM','ST','BF'],W[0,:].tolist()[0])
-plt.title("NMF Coefficient " + str(0+1) + " (400Hz / 4nA)")
-plt.show()
+#plt.figtext(0.25,0.93,"Synergy One", va="center", ha="center", size=20)
+#plt.figtext(0.75,0.93,"Synergy Two", va="center", ha="center", size=20)
 
-plt.figure()
-axes = plt.gca()
-axes.set_ylim([0,5.0])
-plt.bar(['RF','VL','VM','ST','BF'],W[1,:].tolist()[0])
-plt.title("NMF Coefficient " + str(1+1) + " (400Hz / 4nA)")
-plt.show()
+show_muscle_labels=True
+show_column_title=False
+col='#333366'
 
-plt.figure()
-plt.xlabel('Time (ms)')
-axes = plt.gca()
-axes.set_ylim([0,0.2])
-plt.plot(H[:,0])
-plt.title("NMF Factor " + str(1) + " (400Hz / 4nA)")
-plt.show()
+######
+ax1.set_ylim([0,7.0])
+rects1 = ax1.bar(['RF','VL','VM','ST','BF'], W[0,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0)
 
-plt.figure()
-plt.xlabel('Time (ms)')
-axes = plt.gca()
-axes.set_ylim([0,0.12])
-plt.plot(H[:,1])
-plt.title("NMF Factor " + str(2) + " (400Hz / 4nA)")
+ax1.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax1.spines["top"].set_visible(False)
+ax1.spines["right"].set_visible(False)
+ax1.plot()
+
+#######
+ax2.set_ylim([0,0.2])
+rects1 = ax2.plot([x * 0.5 for x in range(len(H[:,0]))],H[:,0],color=col)
+
+ax2.xlabel('Time (ms)')
+ax2.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax2.spines["top"].set_visible(False)
+ax2.spines["right"].set_visible(False)
+ax2.plot()
+
+#######
+ax3.set_ylim([0,6.0])
+rects1 = ax3.bar(['RF','VL','VM','ST','BF'], W[1,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0)
+
+ax3.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax3.spines["top"].set_visible(False)
+ax3.spines["right"].set_visible(False)
+ax3.plot()
+
+#######
+ax4.set_ylim([0,0.1])
+rects1 = ax4.plot([x * 0.5 for x in range(len(H[:,1]))],H[:,1],color=col)
+
+ax4.xlabel('Time (ms)')
+ax4.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax4.spines["top"].set_visible(False)
+ax4.spines["right"].set_visible(False)
+ax4.plot()
+
+fig.savefig('ag_antag_90.svg', dpi=1000, format='svg')
+
 plt.show()
