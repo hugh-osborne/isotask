@@ -75,7 +75,7 @@ if miindmodel.startSimulation() > 0 :
 #  0 degrees : prop_input = [190,390,190,0,0,0,0,0,0]
 # 90 degrees : prop_input = [190,240,190,0,0,0,0,0,0]
 
-prop_input = [190,240,240,240,0,0,0,0,0]
+prop_input = [190,390,190,0,0,0,0,0,0]
 bg_input = [310,310,310,310,310,310,310,310,310]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0,0,0]
@@ -184,31 +184,32 @@ V = numpy.matmul(H,W)
 
 fig, (ax1, ax2, ax3, ax4) = plt.subplots(1,4,figsize=(8,5))
 fig.tight_layout()
-fig.subplots_adjust(top=0.8)
+fig.subplots_adjust(top=0.85)
 fig.set_size_inches(18, 4.5)
 
-#plt.figtext(0.25,0.93,"Synergy One", va="center", ha="center", size=20)
-#plt.figtext(0.75,0.93,"Synergy Two", va="center", ha="center", size=20)
+#plt.figtext(0.25,0.93,"Synergy One", va="center", ha="center", size=30)
+#plt.figtext(0.75,0.93,"Synergy Two", va="center", ha="center", size=30)
 
-show_muscle_labels=True
+show_muscle_labels=False
 show_column_title=False
-col='#333366'
+col='#6666AA'
 
 ######
 ax1.set_ylim([0,7.0])
 rects1 = ax1.bar(['RF','VL','VM','ST','BF'], W[0,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0)
 
-ax1.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax1.tick_params(axis='both',which='both',left=True,bottom=show_muscle_labels,labelbottom=show_muscle_labels,labelleft=True,labelsize=20)
+ax1.yaxis.set_ticks(numpy.arange(0.0, 7.01, 1.0))
 ax1.spines["top"].set_visible(False)
 ax1.spines["right"].set_visible(False)
 ax1.plot()
 
 #######
 ax2.set_ylim([0,0.2])
-rects1 = ax2.plot([x * 0.5 for x in range(len(H[:,0]))],H[:,0],color=col)
+rects1 = ax2.plot([x * 0.0005 for x in range(len(H[:,0]))],H[:,0],color=col)
 
-ax2.xlabel('Time (ms)')
-ax2.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax2.xaxis.set_ticks(numpy.arange(0, 9.0, 2.5))
+ax2.tick_params(axis='both',which='both',left=True,bottom=show_muscle_labels,labelbottom=show_muscle_labels,labelleft=True,labelsize=20)
 ax2.spines["top"].set_visible(False)
 ax2.spines["right"].set_visible(False)
 ax2.plot()
@@ -217,21 +218,23 @@ ax2.plot()
 ax3.set_ylim([0,6.0])
 rects1 = ax3.bar(['RF','VL','VM','ST','BF'], W[1,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0)
 
-ax3.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax3.yaxis.set_ticks(numpy.arange(0.0, 6.01, 1.0))
+ax3.tick_params(axis='both',which='both',left=True,bottom=show_muscle_labels,labelbottom=show_muscle_labels,labelleft=True,labelsize=20)
 ax3.spines["top"].set_visible(False)
 ax3.spines["right"].set_visible(False)
 ax3.plot()
 
 #######
 ax4.set_ylim([0,0.1])
-rects1 = ax4.plot([x * 0.5 for x in range(len(H[:,1]))],H[:,1],color=col)
+rects1 = ax4.plot([x * 0.0005 for x in range(len(H[:,1]))],H[:,1],color=col)
 
-ax4.xlabel('Time (ms)')
-ax4.tick_params(axis='both',which='both',left=True,bottom=True,labelbottom=show_muscle_labels,labelleft=True,labelsize=15)
+ax4.xaxis.set_ticks(numpy.arange(0, 9.0, 2.5))
+ax4.tick_params(axis='both',which='both',left=True,bottom=show_muscle_labels,labelbottom=show_muscle_labels,labelleft=True,labelsize=20)
 ax4.spines["top"].set_visible(False)
 ax4.spines["right"].set_visible(False)
 ax4.plot()
 
-fig.savefig('ag_antag_90.svg', dpi=1000, format='svg')
+fig.savefig('avg_0.svg', dpi=100, format='svg')
+fig.savefig('avg_0.png', dpi=100, format='png')
 
 plt.show()
