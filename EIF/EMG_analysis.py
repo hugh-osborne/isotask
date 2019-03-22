@@ -26,6 +26,7 @@ from sklearn.cluster import KMeans
 from sklearn import preprocessing
 from scipy import signal
 from scipy import stats
+from sklearn.decomposition import NMF
 
 def datafile_generator(wholefile):
         rf=[]
@@ -229,7 +230,10 @@ def cosine_correlation_muscles(directory):
     return muscle_correlation
 
 def NMF_calculator_shared(x,start_vector,start_coeff,rank):
-    nmf = nimfa.Nmf(abs(x), seed=None, W=start_coeff, H=start_vector, rank=rank, max_iter=500)
+    nmf = nimfa.Nmf(abs(x), seed=None, W=start_vector, H=start_coeff, rank=rank, max_iter=500)
+    nmf_other = NMF(solver='mu', n_components=rank, init='nndsvd')
+    W = nmf_other.fit_transform(x)
+    H = nmf_other.components_
     nmf_fit = nmf()
     print('Evar: %5.4f' % nmf_fit.fit.evar())
     vector=np.asarray(nmf_fit.basis())
@@ -239,57 +243,81 @@ def NMF_calculator_shared(x,start_vector,start_coeff,rank):
     for column in range(0,x.shape[1]):
         result = 1-(sum(residuals[:,column]**2)/sum(x[:,column]**2))
         vaf_muscle[0,column] = result
-    return vector,vaf_muscle,synergy_coeff
+    return W,vaf_muscle,H
 
 def synergy_analysis_shared(directory):
+
+    directorys=["S1_seperated by angle/p1","S1_seperated by angle/p2","S1_seperated by angle/p3","S1_seperated by angle/p4","S1_seperated by angle/p5","S1_seperated by angle/p6","S1_seperated by angle/p7","S1_seperated by angle/p8","S1_seperated by angle/p9","S1_seperated by angle/p10","S1_seperated by angle/p11","S1_seperated by angle/p12","S1_seperated by angle/p13","S1_seperated by angle/p14"]
     time_series_length = 20000
     t_start = 18000
     t_end = 38000
     num_angles = 4
     num_coefficients = 5
-    vector = np.zeros([time_series_length*num_angles,0])
-    vaf_muscle = np.zeros([0,num_coefficients])
-    synergy_coeff = np.zeros([0,num_coefficients])
-    synergy1_vector_correlation = []
-    synergy1_coeff_correlation = []
-    files=[]
-    for file in os.listdir(directory):
-        if file.endswith(".csv"):
-            files.append(file)
-    datafile_full = np.zeros([0,num_coefficients])
-    for file in files:
-        wholefile=np.genfromtxt(os.path.join(directory, file),delimiter=',',skip_header=1)
-        df1=datafile_generator(wholefile)
-        datafile1 = df1[t_start:t_end]
-        for column in range(0,datafile1.shape[1]):
-            datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
-            datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
-            datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((500,))/500, mode='same')
-            datafile1[:,column]=amplitude_normalization(datafile1[:,column])
+    rank = 3
 
-        print("datafile shape:")
-        print(datafile1.shape)
-        datafile_full = np.append(datafile_full, datafile1, axis=0)
+    datafile_avg = np.zeros([num_angles*time_series_length,num_coefficients])
+    for d in directorys:
+        vector = np.zeros([time_series_length*num_angles,0])
+        vaf_muscle = np.zeros([0,num_coefficients])
+        synergy_coeff = np.zeros([0,num_coefficients])
+        synergy1_vector_correlation = []
+        synergy1_coeff_correlation = []
+        files=[]
+        for file in os.listdir(d):
+            if file.endswith(".csv"):
+                files.append(file)
+        datafile_full = np.zeros([0,num_coefficients])
+        for file in files:
+            wholefile=np.genfromtxt(os.path.join(d, file),delimiter=',',skip_header=1)
+            df1=datafile_generator(wholefile)
+            datafile1 = df1[t_start:t_end]
+            for column in range(0,datafile1.shape[1]):
+                datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
+                datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
+                datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((500,))/500, mode='same')
+                datafile1[:,column]=amplitude_normalization(datafile1[:,column])
 
+            datafile_full = np.append(datafile_full, datafile1, axis=0)
+        datafile_avg += datafile_full
 
-    print('FULL LENGTH : ')
-    print(datafile_full.shape)
+    datafile_avg = datafile_avg / len(directorys)
+    start_coeff = np.random.rand(rank,num_coefficients)
+    build_zeros = np.zeros([time_series_length,rank])
+    build_random = np.random.rand(time_series_length,rank)
 
-    start_coeff = [0,0,0,0,0]
-    start_vector =
-    a,b,c=NMF_calculator_shared(datafile_full,rank=2)
+    print(start_coeff.shape)
 
+    top_row = build_random
+    top_row = np.append(top_row, build_random, axis=0)
+    top_row = np.append(top_row, build_random, axis=0)
+    top_row = np.append(top_row, build_random, axis=0)
+
+    print(top_row.shape)
+
+    a,b,c=NMF_calculator_shared(datafile_avg,top_row, start_coeff, rank=rank)
+
+    print(a.shape)
+    print(b.shape)
+    print(c.shape)
+    print(np.ravel(c[0].tolist()))
+    print(np.ravel(c[1].tolist()))
+
+    index = np.arange(num_coefficients)
     plt.figure()
 
     a = np.transpose(a)
-    plt.subplot(411)
-    plt.bar(index,np.ravel(c[0].tolist()[0]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-    plt.subplot(412)
-    plt.bar(index,np.ravel(c[1].tolist()[0]),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-    plt.subplot(413)
+    plt.subplot(611)
+    plt.bar(index,np.ravel(c[0].tolist()),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+    plt.subplot(612)
+    plt.bar(index,np.ravel(c[1].tolist()),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+    plt.subplot(613)
+    plt.bar(index,np.ravel(c[2].tolist()),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
+    plt.subplot(614)
     plt.plot(a[0].tolist())
-    plt.subplot(414)
+    plt.subplot(615)
     plt.plot(a[1].tolist())
+    plt.subplot(616)
+    plt.plot(a[2].tolist())
     plt.show()
 
 
@@ -300,8 +328,11 @@ def synergy_analysis(directory):
     synergy_coeff = np.zeros([0,5])
     synergy1_vector_correlation = []
     synergy2_vector_correlation = []
+    synergy3_vector_correlation = []
     synergy1_coeff_correlation = []
     synergy2_coeff_correlation = []
+    synergy3_coeff_correlation = []
+
     #directory = select_directory()
     files=[]
     for file in os.listdir(directory):
@@ -318,7 +349,7 @@ def synergy_analysis(directory):
             for column in range(0,datafile1.shape[1]):
                 datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
                 datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
-                datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((3000,))/3000, mode='same')
+                datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((500,))/500, mode='same')
                 datafile1[:,column]=amplitude_normalization(datafile1[:,column])
 
                 # plt.subplot(511 + column)
@@ -328,7 +359,12 @@ def synergy_analysis(directory):
                 # datafile1[200000:20000,column] = np.zeros(1000)
             stuff = np.append(stuff, datafile1, axis=1)
             print(stuff.shape)
-            a,b,c=NMF_calculator(datafile1,rank=2)
+            a,b,c=NMF_calculator(datafile1,rank=3)
+
+            print("abc:")
+            print(a.shape)
+            print(b.shape)
+            print(c.shape)
             #
             index = np.arange(5)
             names=("RF","VL","VM","ST","BF")
@@ -365,10 +401,12 @@ def synergy_analysis(directory):
             print(synergy_coeff.shape)
     vector=np.transpose(vector)
     stuff=np.transpose(stuff)
-    synergy1_vector_combinations = list(itertools.combinations(vector[0:num_actions*30:2,:],2))
-    synergy2_vector_combinations = list(itertools.combinations(vector[1:num_actions*30:2,:],2))
-    synergy1_coeff_combinations = list(itertools.combinations(synergy_coeff[0:num_actions*30:2],2))
-    synergy2_coeff_combinations = list(itertools.combinations(synergy_coeff[1:num_actions*30:2],2))
+    synergy1_vector_combinations = list(itertools.combinations(vector[0:num_actions*30:3,:],3))
+    synergy2_vector_combinations = list(itertools.combinations(vector[1:num_actions*30:3,:],3))
+    synergy3_vector_combinations = list(itertools.combinations(vector[2:num_actions*30:3,:],3))
+    synergy1_coeff_combinations = list(itertools.combinations(synergy_coeff[0:num_actions*30:3],3))
+    synergy2_coeff_combinations = list(itertools.combinations(synergy_coeff[1:num_actions*30:3],3))
+    synergy3_coeff_combinations = list(itertools.combinations(synergy_coeff[2:num_actions*30:3],3))
     """
     for combination in synergy1_vector_combinations:
           synergy1_vector_correlation.append(stats.pearsonr(combinaa,b,c=NMF_calculator(datafile1,rank=2)tion[0],combination[1]))
@@ -478,12 +516,12 @@ for muscle in range(0,5):
 plt.bar(index,np.ravel(synergy_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 
 """
-# vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1=synergy_analysis(directory=directory0_1)
+vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1=synergy_analysis(directory=directory0_1)
 # vector20_1,vaf_muscle20_1,synergy_coeff20_1,synergy1_vector_correlation20_1,synergy2_vector_correlation20_1,synergy1_coeff_correlation20_1,synergy2_coeff_correlation20_1=synergy_analysis(directory=directory20_1)
 # vector60_1,vaf_muscle60_1,synergy_coeff60_1,synergy1_vector_correlation60_1,synergy2_vector_correlation60_1,synergy1_coeff_correlation60_1,synergy2_coeff_correlation60_1=synergy_analysis(directory=directory60_1)
 # vector90_1,vaf_muscle90_1,synergy_coeff90_1,synergy1_vector_correlation90_1,synergy2_vector_correlation90_1,synergy1_coeff_correlation90_1,synergy2_coeff_correlation90_1=synergy_analysis(directory=directory90_1)
 
-synergy_analysis_shared(directory="S1_seperated by angle/p1")
+# synergy_analysis_shared(directory="S1_seperated by angle/p2")
 # vector0_2,vaf_muscle0_2,synergy_coeff0_2,synergy1_vector_correlation0_2,synergy2_vector_correlation0_2,synergy1_coeff_correlation0_2,synergy2_coeff_correlation0_2=synergy_analysis(directory=directory0_2)
 # vector20_2,vaf_muscle20_2,synergy_coeff20_2,synergy1_vector_correlation20_2,synergy2_vector_correlation20_2,synergy1_coeff_correlation20_2,synergy2_coeff_correlation20_2=synergy_analysis(directory=directory20_2)
 # vector60_2,vaf_muscle60_2,synergy_coeff60_2,synergy1_vector_correlation60_2,synergy2_vector_correlation60_2,synergy1_coeff_correlation60_2,synergy2_coeff_correlation60_2=synergy_analysis(directory=directory60_2)
@@ -786,17 +824,23 @@ names=("RF","VL","VM","ST","BF")
 #
 average_synergy1_coeff0_1=np.zeros([1,5])
 average_synergy2_coeff0_1=np.zeros([1,5])
+average_synergy3_coeff0_1=np.zeros([1,5])
 for coeff in range(0,5):
-    average_synergy1_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[0:30:2,coeff])
+    average_synergy1_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[0:30:3,coeff])
 for coeff in range(0,5):
-    average_synergy2_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[1:30:2,coeff])
+    average_synergy2_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[1:30:3,coeff])
+for coeff in range(0,5):
+    average_synergy3_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[2:30:3,coeff])
 
 average_synergy1_vector0_1=np.zeros([1,20000])
 average_synergy2_vector0_1=np.zeros([1,20000])
+average_synergy3_vector0_1=np.zeros([1,20000])
 for vector in range(0,20000):
-    average_synergy1_vector0_1[0,vector]=np.mean(vector0_1[0:30:2,vector])
+    average_synergy1_vector0_1[0,vector]=np.mean(vector0_1[0:30:3,vector])
 for vector in range(0,20000):
-    average_synergy2_vector0_1[0,vector]=np.mean(vector0_1[1:30:2,vector])
+    average_synergy2_vector0_1[0,vector]=np.mean(vector0_1[1:30:3,vector])
+for vector in range(0,20000):
+    average_synergy3_vector0_1[0,vector]=np.mean(vector0_1[2:30:3,vector])
 
 average_synergy1_stuff0_1=np.zeros([1,20000])
 average_synergy2_stuff0_1=np.zeros([1,20000])
@@ -937,10 +981,12 @@ def plot_line(x):
 # plot_line(vaf_muscle90_1)
 
 plt.figure()
-plt.subplot(211)
+plt.subplot(311)
 plt.plot(average_synergy1_vector0_1[0])
-plt.subplot(212)
+plt.subplot(312)
 plt.plot(average_synergy2_vector0_1[0])
+plt.subplot(313)
+plt.plot(average_synergy3_vector0_1[0])
 plt.show()
 # plt.plot(average_synergy1_vector20_1[0])
 # plt.show()
@@ -1036,4 +1082,8 @@ plt.bar(index,np.ravel(average_synergy2_coeff0_1),tick_label=("RF","VL","VM","ST
 # plt.bar(index,np.ravel(average_synergy2_coeff60_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 # plt.bar(index,np.ravel(average_synergy2_coeff90_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 
+plt.show()
+
+plt.figure()
+plt.bar(index,np.ravel(average_synergy3_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 plt.show()

@@ -172,7 +172,7 @@ plt.show()
 
 bwah = numpy.absolute(bwah)
 
-comps = 2
+comps = 3
 
 nmf = nimfa.Nmf(bwah, seed="nndsvd", rank=comps, max_iter=500)
 nmf_fit = nmf()
@@ -182,7 +182,7 @@ H = nmf_fit.coef().transpose()
 
 V = numpy.matmul(H,W)
 
-fig, (ax1, ax2, ax3, ax4) = plt.subplots(1,4,figsize=(8,5))
+fig, (ax1, ax2, ax3, ax4, ax5, ax6) = plt.subplots(1,6,figsize=(8,5))
 fig.tight_layout()
 fig.subplots_adjust(top=0.85)
 fig.set_size_inches(18, 4.5)
@@ -190,7 +190,7 @@ fig.set_size_inches(18, 4.5)
 #plt.figtext(0.25,0.93,"Synergy One", va="center", ha="center", size=30)
 #plt.figtext(0.75,0.93,"Synergy Two", va="center", ha="center", size=30)
 
-show_muscle_labels=False
+show_muscle_labels=True
 show_column_title=False
 col='#6666AA'
 
@@ -234,7 +234,27 @@ ax4.spines["top"].set_visible(False)
 ax4.spines["right"].set_visible(False)
 ax4.plot()
 
-fig.savefig('avg_0.svg', dpi=100, format='svg')
-fig.savefig('avg_0.png', dpi=100, format='png')
+#######
+ax5.set_ylim([0,6.0])
+rects1 = ax5.bar(['RF','VL','VM','ST','BF'], W[2,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0)
+
+ax5.yaxis.set_ticks(numpy.arange(0.0, 6.01, 1.0))
+ax5.tick_params(axis='both',which='both',left=True,bottom=show_muscle_labels,labelbottom=show_muscle_labels,labelleft=True,labelsize=20)
+ax5.spines["top"].set_visible(False)
+ax5.spines["right"].set_visible(False)
+ax5.plot()
+
+#######
+ax6.set_ylim([0,0.1])
+rects1 = ax6.plot([x * 0.0005 for x in range(len(H[:,2]))],H[:,2],color=col)
+
+ax6.xaxis.set_ticks(numpy.arange(0, 9.0, 2.5))
+ax6.tick_params(axis='both',which='both',left=True,bottom=show_muscle_labels,labelbottom=show_muscle_labels,labelleft=True,labelsize=20)
+ax6.spines["top"].set_visible(False)
+ax6.spines["right"].set_visible(False)
+ax6.plot()
+
+fig.savefig('3_avg_0.svg', dpi=100, format='svg')
+fig.savefig('3_avg_0.png', dpi=100, format='png')
 
 plt.show()
