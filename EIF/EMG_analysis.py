@@ -169,17 +169,40 @@ def PCA_calculator(x):
     return vector,singular_values
 
 def NMF_calculator(x,rank):
-    nmf = nimfa.Nmf(abs(x), seed='nndsvd', rank=rank, max_iter=5000)
+    nmf = nimfa.Nmf(abs(x), seed='nndsvd', rank=rank, max_iter=50)
     nmf_fit = nmf()
     print('Evar: %5.4f' % nmf_fit.fit.evar())
     vector=np.asarray(nmf_fit.basis())
     synergy_coeff=nmf_fit.fit.coef()
     residuals=np.asarray(nmf_fit.fit.residuals())
+
+    d = nmf.estimate_rank(rank_range=[1,2,3,4,5], n_run=10, idx=0, what=['residuals'])
+    rss = []
+    r_i = 0
     vaf_muscle=np.zeros([1,x.shape[1]])
-    for column in range(0,x.shape[1]):
-        result = 1-(sum(residuals[:,column]**2)/sum(x[:,column]**2))
-        vaf_muscle[0,column] = result
-    return vector,vaf_muscle,synergy_coeff
+    for r, dd in d.items():
+        res = dd['residuals']
+        # print(res)
+        # result = (res**2)/(np.sum(np.square(x - np.mean(x))))
+        # print('blah')
+        # print(result)
+        # rss = rss + [result]
+
+        avg_res = 0
+        print('before')
+        print(res)
+        for column in range(0,x.shape[1]):
+            result = 1-np.abs(np.sum(np.square(res))/(np.sum(np.square(x[:,column]))))
+            avg_res = avg_res + result
+            # vaf_muscle[r_i,column] = result
+
+        r_i = r_i + 1
+        avg_res = avg_res / x.shape[1]
+        rss = rss + [avg_res]
+
+    print('RSS WITH VAR')
+    print(rss)
+    return vector,vaf_muscle,synergy_coeff,rss
 
 def pearsons_correlation_muscles(directory):
     muscle_correlation = []
@@ -253,34 +276,41 @@ def synergy_analysis_shared(directory):
     t_end = 38000
     num_angles = 4
     num_coefficients = 5
-    rank = 3
+    rank = 2
+    times = [20000,49000,81000,112000,141000]
+    # times = [20000]
 
-    datafile_avg = np.zeros([num_angles*time_series_length,num_coefficients])
+    datafile_avg = np.zeros([time_series_length,num_coefficients])
     for d in directorys:
-        vector = np.zeros([time_series_length*num_angles,0])
-        vaf_muscle = np.zeros([0,num_coefficients])
-        synergy_coeff = np.zeros([0,num_coefficients])
-        synergy1_vector_correlation = []
-        synergy1_coeff_correlation = []
-        files=[]
-        for file in os.listdir(d):
-            if file.endswith(".csv"):
-                files.append(file)
-        datafile_full = np.zeros([0,num_coefficients])
-        for file in files:
-            wholefile=np.genfromtxt(os.path.join(d, file),delimiter=',',skip_header=1)
-            df1=datafile_generator(wholefile)
-            datafile1 = df1[t_start:t_end]
-            for column in range(0,datafile1.shape[1]):
-                datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
-                datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
-                datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((500,))/500, mode='same')
-                datafile1[:,column]=amplitude_normalization(datafile1[:,column])
+        datafile_action_avg = np.zeros([time_series_length,num_coefficients])
+        for t in times:
+            files=[]
+            for file in os.listdir(d):
+                if file.endswith(".csv"):
+                    files.append(file)
+            datafile_full = np.zeros([0,num_coefficients])
+            for file in files:
+                if "_0deg" not in file:
+                    continue
+                wholefile=np.genfromtxt(os.path.join(d, file),delimiter=',',skip_header=1)
+                df1=datafile_generator(wholefile)
+                datafile1 = df1[t-2000:t+18000]
+                for column in range(0,datafile1.shape[1]):
+                    datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
+                    datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
+                    datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((500,))/500, mode='same')
+                    # datafile1[:,column]=amplitude_normalization(datafile1[:,column])
 
-            datafile_full = np.append(datafile_full, datafile1, axis=0)
-        datafile_avg += datafile_full
+                datafile_full = np.append(datafile_full, datafile1, axis=0)
+            datafile_action_avg += datafile_full
+        datafile_action_avg = datafile_action_avg / len(times)
+        datafile_avg += datafile_action_avg
 
     datafile_avg = datafile_avg / len(directorys)
+
+    # for column in range(0,datafile_avg.shape[1]):
+    #     datafile_avg[:,column]=amplitude_normalization(datafile_avg[:,column])
+
     start_coeff = np.random.rand(rank,num_coefficients)
     build_zeros = np.zeros([time_series_length,rank])
     build_random = np.random.rand(time_series_length,rank)
@@ -288,9 +318,9 @@ def synergy_analysis_shared(directory):
     print(start_coeff.shape)
 
     top_row = build_random
-    top_row = np.append(top_row, build_random, axis=0)
-    top_row = np.append(top_row, build_random, axis=0)
-    top_row = np.append(top_row, build_random, axis=0)
+    # top_row = np.append(top_row, build_random, axis=0)
+    # top_row = np.append(top_row, build_random, axis=0)
+    # top_row = np.append(top_row, build_random, axis=0)
 
     print(top_row.shape)
 
@@ -306,25 +336,23 @@ def synergy_analysis_shared(directory):
     plt.figure()
 
     a = np.transpose(a)
-    plt.subplot(611)
+    datafile_avg=np.transpose(datafile_avg)
+    plt.subplot(411)
     plt.bar(index,np.ravel(c[0].tolist()),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-    plt.subplot(612)
+    plt.subplot(412)
     plt.bar(index,np.ravel(c[1].tolist()),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-    plt.subplot(613)
-    plt.bar(index,np.ravel(c[2].tolist()),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-    plt.subplot(614)
+    plt.subplot(413)
     plt.plot(a[0].tolist())
-    plt.subplot(615)
+    plt.subplot(414)
     plt.plot(a[1].tolist())
-    plt.subplot(616)
-    plt.plot(a[2].tolist())
     plt.show()
-
+    return a,c,datafile_avg
 
 def synergy_analysis(directory):
     vector = np.zeros([20000,0])
     stuff = np.zeros([20000,0])
     vaf_muscle = np.zeros([0,5])
+    rss_nums = np.zeros([0,5])
     synergy_coeff = np.zeros([0,5])
     synergy1_vector_correlation = []
     synergy2_vector_correlation = []
@@ -350,7 +378,7 @@ def synergy_analysis(directory):
                 datafile1[:,column]=butter_bandpass_filter(datafile1[:,column],lowcut=20,highcut=450,fs=2000,order=2)
                 datafile1[:,column]=butter_lowpass_filter(abs(datafile1[:,column]),lowcut=20,fs=2000,order=2)
                 datafile1[:,column] = np.convolve(datafile1[:,column], np.ones((500,))/500, mode='same')
-                datafile1[:,column]=amplitude_normalization(datafile1[:,column])
+                # datafile1[:,column]=amplitude_normalization(datafile1[:,column])
 
                 # plt.subplot(511 + column)
                 # plt.plot(datafile1[:,column].tolist())
@@ -359,7 +387,7 @@ def synergy_analysis(directory):
                 # datafile1[200000:20000,column] = np.zeros(1000)
             stuff = np.append(stuff, datafile1, axis=1)
             print(stuff.shape)
-            a,b,c=NMF_calculator(datafile1,rank=3)
+            a,b,c,rss=NMF_calculator(datafile1,rank=2)
 
             print("abc:")
             print(a.shape)
@@ -396,17 +424,24 @@ def synergy_analysis(directory):
             print(vector.shape)
             # vector=amplitude_normalization(vector)
             vaf_muscle=np.append(vaf_muscle,b,axis=0)
+            print(np.array(rss).shape)
+            rs = np.reshape(np.array(rss), [1,5])
+            rss_nums=np.append(rss_nums,rs,axis=0)
             print(vaf_muscle.shape)
             synergy_coeff=np.append(synergy_coeff,c,axis=0)
             print(synergy_coeff.shape)
     vector=np.transpose(vector)
     stuff=np.transpose(stuff)
-    synergy1_vector_combinations = list(itertools.combinations(vector[0:num_actions*30:3,:],3))
-    synergy2_vector_combinations = list(itertools.combinations(vector[1:num_actions*30:3,:],3))
-    synergy3_vector_combinations = list(itertools.combinations(vector[2:num_actions*30:3,:],3))
-    synergy1_coeff_combinations = list(itertools.combinations(synergy_coeff[0:num_actions*30:3],3))
-    synergy2_coeff_combinations = list(itertools.combinations(synergy_coeff[1:num_actions*30:3],3))
-    synergy3_coeff_combinations = list(itertools.combinations(synergy_coeff[2:num_actions*30:3],3))
+    print('******* VAF *******')
+    print(rss_nums)
+    print(np.mean(rss_nums, axis = 0))
+    # plt.figure()
+    # plt.plot(np.mean(rss_nums, axis = 0))
+    # plt.show()
+    synergy1_vector_combinations = list(itertools.combinations(vector[0:num_actions*30:2,:],2))
+    synergy2_vector_combinations = list(itertools.combinations(vector[1:num_actions*30:2,:],2))
+    synergy1_coeff_combinations = list(itertools.combinations(synergy_coeff[0:num_actions*30:2],2))
+    synergy2_coeff_combinations = list(itertools.combinations(synergy_coeff[1:num_actions*30:2],2))
     """
     for combination in synergy1_vector_combinations:
           synergy1_vector_correlation.append(stats.pearsonr(combinaa,b,c=NMF_calculator(datafile1,rank=2)tion[0],combination[1]))
@@ -429,7 +464,7 @@ def synergy_analysis(directory):
     synergy2_vector_correlation=np.asarray(synergy2_vector_correlation)
     synergy1_coeff_correlation=np.asarray(synergy1_coeff_correlation)
     synergy2_coeff_correlation=np.asarray(synergy2_coeff_correlation)
-    return vector,vaf_muscle,synergy_coeff,synergy1_vector_correlation,synergy2_vector_correlation,synergy1_coeff_correlation,synergy2_coeff_correlation,stuff
+    return vector,vaf_muscle,synergy_coeff,synergy1_vector_correlation,synergy2_vector_correlation,synergy1_coeff_correlation,synergy2_coeff_correlation,stuff,rss_nums
 
 def interpolator(x):
     for column in range(0,5):
@@ -503,7 +538,7 @@ for muscle in range(0,5):
 average_muscle_correlation=np.zeros([4,5])
 for muscle in range(0,5):
         average_muscle_correlation[0,muscle]=np.mean(muscle_correlation0[muscle:-1:5,0])
-for muscle in range(0,5):
+for muscle in range(0,5):figure()
         average_muscle_correlation[1,muscle]=np.mean(muscle_correlation20[muscle:-1:5,0])
 for muscle in range(0,5):where(labels==1),0]),xs=range(1,8),c="red",marker="o",edgecolor='k',s=300)
 # ax.scatter(ys=np.ravel(norm[np.where(labels==1),1]),xs=range(1,8),c="blue",marker="v",edgecolor='k',s=300)
@@ -516,331 +551,59 @@ for muscle in range(0,5):
 plt.bar(index,np.ravel(synergy_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 
 """
-vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1=synergy_analysis(directory=directory0_1)
-# vector20_1,vaf_muscle20_1,synergy_coeff20_1,synergy1_vector_correlation20_1,synergy2_vector_correlation20_1,synergy1_coeff_correlation20_1,synergy2_coeff_correlation20_1=synergy_analysis(directory=directory20_1)
-# vector60_1,vaf_muscle60_1,synergy_coeff60_1,synergy1_vector_correlation60_1,synergy2_vector_correlation60_1,synergy1_coeff_correlation60_1,synergy2_coeff_correlation60_1=synergy_analysis(directory=directory60_1)
-# vector90_1,vaf_muscle90_1,synergy_coeff90_1,synergy1_vector_correlation90_1,synergy2_vector_correlation90_1,synergy1_coeff_correlation90_1,synergy2_coeff_correlation90_1=synergy_analysis(directory=directory90_1)
-
-# synergy_analysis_shared(directory="S1_seperated by angle/p2")
-# vector0_2,vaf_muscle0_2,synergy_coeff0_2,synergy1_vector_correlation0_2,synergy2_vector_correlation0_2,synergy1_coeff_correlation0_2,synergy2_coeff_correlation0_2=synergy_analysis(directory=directory0_2)
-# vector20_2,vaf_muscle20_2,synergy_coeff20_2,synergy1_vector_correlation20_2,synergy2_vector_correlation20_2,synergy1_coeff_correlation20_2,synergy2_coeff_correlation20_2=synergy_analysis(directory=directory20_2)
-# vector60_2,vaf_muscle60_2,synergy_coeff60_2,synergy1_vector_correlation60_2,synergy2_vector_correlation60_2,synergy1_coeff_correlation60_2,synergy2_coeff_correlation60_2=synergy_analysis(directory=directory60_2)
-# vector90_2,vaf_muscle90_2,synergy_coeff90_2,synergy1_vector_correlation90_2,synergy2_vector_correlation90_2,synergy1_coeff_correlation90_2,synergy2_coeff_correlation90_2=synergy_analysis(directory=directory90_2)
-
-average_synergy1_coeff_correlation_1=np.zeros([4,1])
-average_synergy1_coeff_correlation_1[0,0]=np.mean(synergy1_coeff_correlation0_1[:,0])
-# average_synergy1_coeff_correlation_1[1,0]=np.mean(synergy1_coeff_correlation20_1[:,0])
-# average_synergy1_coeff_correlation_1[2,0]=np.mean(synergy1_coeff_correlation60_1[:,0])
-# average_synergy1_coeff_correlation_1[3,0]=np.mean(synergy1_coeff_correlation90_1[:,0])
-
-average_synergy2_coeff_correlation_1=np.zeros([4,1])
-average_synergy2_coeff_correlation_1[0,0]=np.mean(synergy2_coeff_correlation0_1[:,0])
-# average_synergy2_coeff_correlation_1[1,0]=np.mean(synergy2_coeff_correlation20_1[:,0])
-# average_synergy2_coeff_correlation_1[2,0]=np.mean(synergy2_coeff_correlation60_1[:,0])
-# average_synergy2_coeff_correlation_1[3,0]=np.mean(synergy2_coeff_correlation90_1[:,0])
-
-average_synergy1_vector_correlation_1=np.zeros([4,1])
-average_synergy1_vector_correlation_1[0,0]=np.mean(synergy1_vector_correlation0_1)
-# average_synergy1_vector_correlation_1[1,0]=np.mean(synergy1_vector_correlation20_1)
-# average_synergy1_vector_correlation_1[2,0]=np.mean(synergy1_vector_correlation60_1)
-# average_synergy1_vector_correlation_1[3,0]=np.mean(synergy1_vector_correlation90_1)
-
-average_synergy2_vector_correlation_1=np.zeros([4,1])
-average_synergy2_vector_correlation_1[0,0]=np.mean(synergy2_vector_correlation0_1)
-# average_synergy2_vector_correlation_1[1,0]=np.mean(synergy2_vector_correlation20_1)
-# average_synergy2_vector_correlation_1[2,0]=np.mean(synergy2_vector_correlation60_1)
-# average_synergy2_vector_correlation_1[3,0]=np.mean(synergy2_vector_correlation90_1)
-#
-# average_synergy1_coeff_correlation_2=np.zeros([4,1])
-# average_synergy1_coeff_correlation_2[0,0]=np.mean(synergy1_coeff_correlation0_2[:,0])
-# average_synergy1_coeff_correlation_2[1,0]=np.mean(synergy1_coeff_correlation20_2[:,0])
-# average_synergy1_coeff_correlation_2[2,0]=np.mean(synergy1_coeff_correlation60_2[:,0])
-# average_synergy1_coeff_correlation_2[3,0]=np.mean(synergy1_coeff_correlation90_2[:,0])
-#
-# average_synergy2_coeff_correlation_2=np.zeros([4,1])
-# average_synergy2_coeff_correlation_2[0,0]=np.mean(synergy2_coeff_correlation0_2[:,0])
-# average_synergy2_coeff_correlation_2[1,0]=np.mean(synergy2_coeff_correlation20_2[:,0])
-# average_synergy2_coeff_correlation_2[2,0]=np.mean(synergy2_coeff_correlation60_2[:,0])
-# average_synergy2_coeff_correlation_2[3,0]=np.mean(synergy2_coeff_correlation90_2[:,0])
-#
-# average_synergy1_vector_correlation_2=np.zeros([4,1])
-# average_synergy1_vector_correlation_2[0,0]=np.mean(synergy1_vector_correlation0_2)
-# average_synergy1_vector_correlation_2[1,0]=np.mean(synergy1_vector_correlation20_2)
-# average_synergy1_vector_correlation_2[2,0]=np.mean(synergy1_vector_correlation60_2)
-# average_synergy1_vector_correlation_2[3,0]=np.mean(synergy1_vector_correlation90_2)
-#
-# average_synergy2_vector_correlation_2=np.zeros([4,1])
-# average_synergy2_vector_correlation_2[0,0]=np.mean(synergy2_vector_correlation0_2)
-# average_synergy2_vector_correlation_2[1,0]=np.mean(synergy2_vector_correlation20_2)
-# average_synergy2_vector_correlation_2[2,0]=np.mean(synergy2_vector_correlation60_2)
-# average_synergy2_vector_correlation_2[3,0]=np.mean(synergy2_vector_correlation90_2)
-
-# norm=preprocessing.scale(synergy_coeff0_1[0:30:2])
-# norm1=preprocessing.scale(synergy_coeff0_1[1:30:2])
-# a=np.append(norm,norm1,axis=1)
-#
-# combinations=list(itertools.combinations(range(1,len(np.ravel(a[0]))),2))
-# for combination in combinations:
-#     print(stats.levene(np.ravel(a[:,combination[0]]),np.ravel(a[:,combination[1]]))[1])
-#
-# elbow_calculator(a)
-# kmeans = KMeans(n_clusters=2)
-# kmeans.fit(a)
-# kmeans.predict(a)
-# labels = kmeans.labels_
-# centroids = kmeans.cluster_centers_
-#
-# elbow_calculator(norm)
-# kmeans = KMeans(n_clusters=2)
-# kmeans.fit(norm)
-# kmeans.predict(norm)synergy_coeff0_1
-# labels = kmeans.labels_
-# centroids = kmeans.cluster_centers_
-#
-# elbow_calculator(norm1)
-# kmeans1 = KMeans(n_clusters=2)
-# kmeans.fit(norm1)
-# kmeans.predict(norm1)
-# labels1 = kmeans.labels_
-# centroids = kmeans.cluster_centers_
-#
-# fig = plt.figure(figsize=(18,7))
-# ax = fig.add_subplot(111,projection='3d')
-# ax.set_xticks(range(1,15))
-#
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),0]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=20,c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),1]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=20,c="blue",marker="v",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),2]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=20,c="green",marker="s",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),3]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=20,c="yellow",marker="*",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),4]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=20,c="purple",marker="p",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),5]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=35,c="black",marker="o",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),6]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=35,c="pink",marker="v",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),7]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=35,c="gold",marker="s",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),8]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=35,c="darkgreen",marker="*",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==0),9]),xs=range(1,1+len(np.ravel(a[np.where(labels==0),0]))),zs=35,c="silver",marker="p",edgecolor='k',s=300)
-#for muscle in range(0,5):
-#         average_muscle_correlation[1,muscle]=np.mean(muscle_correlation20[muscle:-1:5,0])
-# for muscle in range(0,5):where(labels==1),0]),xs=range(1,8),c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),0]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=1,c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),1]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=1,c="blue",marker="v",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),2]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=1,c="green",marker="s",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),3]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=1,c="yellow",marker="*",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),4]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=1,c="purple",marker="p",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),5]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=15,c="black",marker="o",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),6]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=15,c="pink",marker="v",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),7]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=15,c="gold",marker="s",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),8]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=15,c="darkgreen",marker="*",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(a[np.where(labels==1),9]),xs=range(1,1+len(np.ravel(a[np.where(labels==1),0]))),zs=15,c="silver",marker="p",edgecolor='k',s=300)
-#
-#
-# ax.scatter(ys=np.ravel(norm[np.where(labels==1),0]),xs=range(1,8),c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(norm[np.where(labels==1),1]),xs=range(1,8),c="blue",marker="v",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(norm[np.where(labels==1),2]),xs=range(1,8),c="green",marker="s",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(norm[np.where(labels==1),3]),xs=range(1,8),c="yellow",marker="*",edgecolor='k',s=300)
-# ax.scatter(ys=np.ravel(norm[np.where(labels==1),4]),xs=range(1,8),c="purple",marker="p",edgecolor='k',s=300)
-#
-# fig = plt.figure(figsize=(18,7))
-# ax = fig.add_subplot(111)
-# ax.set_xticks(range(1,15))
-#for muscle in range(0,5):
-#         average_muscle_correlation[1,muscle]=np.mean(muscle_correlation20[muscle:-1:5,0])
-# for muscle in range(0,5):where(labels==1),0]),xs=range(1,8),c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==0),0]),x=range(1,8),c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==0),1]),x=range(1,8),c="blue",marker="v",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==0),2]),x=range(1,8),c="green",marker="s",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==0),3]),x=range(1,8),c="yellow",marker="*",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==0),4]),x=range(1,8),c="purple",marker="p",edgecolor='k',s=300)
-#
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),0]),x=range(1,8),c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),1]),x=range(1,8),c="blue",marker="v",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),2]),x=range(1,8),c="green",marker="s",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),3]),x=range(1,8),c="yellow",marker="*",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),4]),x=range(1,8),c="purple",marker="p",edgecolor='k',s=300)
-#
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),0]),x=range(1,8),c="red",marker="o",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),1]),x=range(1,8),c="blue",marker="v",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),2]),x=range(1,8),c="green",marker="s",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),3]),x=range(1,8),c="yellow",marker="*",edgecolor='k',s=300)
-# ax.scatter(y=np.ravel(norm[np.where(labels==1),4]),x=range(1,8),c="purple",marker="p",edgecolor='k',s=300)
-
-"""
-What do i want these graphs to demonstrate?
-I want them to show the changes in co-eff recruitment as angle and position changes. This is most apparent
-in synergy 2 as this shows the greatest change with angle. I will need to show statistically that the
-coeff values are different at different angles. Difference in overall values not just average. Don't have
-an independent variable for this though. Show the relationship between values and angle? Relationship
-is non-linear for the most part, making correlation difficult.
-
-Why?
-Coeff is time independent and therefore reflects synergy changes across the whole activity better than
-changes in vector. The changes in recruitment will demonstrate that different angles will result in different
-movements.
-
-Tomorrow: Do correlative tests, try and get a general linear model, using the biarticular muscles value as the
-dependent variable. (BF and RF). Probably need to go over to R as the python module is a bit arcane.
-"""
-
-
+rss_n = np.zeros([0,5])
+# vaf_m = np.zeros([0,5])
+vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1,rss_nums=synergy_analysis(directory=directory0_1)
+print(vaf_muscle0_1.shape)
+print(vaf_muscle0_1)
+rss_n=np.append(rss_n,rss_nums,axis=0)
+# vaf_m=np.append(vaf_m,vaf_muscle0_1,axis=0)
+vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1,rss_nums=synergy_analysis(directory=directory20_1)
+rss_n=np.append(rss_n,rss_nums,axis=0)
+# vaf_m=np.append(vaf_m,vaf_muscle0_1,axis=0)
+vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1,rss_nums=synergy_analysis(directory=directory60_1)
+rss_n=np.append(rss_n,rss_nums,axis=0)
+# vaf_m=np.append(vaf_m,vaf_muscle0_1,axis=0)
+vector0_1,vaf_muscle0_1,synergy_coeff0_1,synergy1_vector_correlation0_1,synergy2_vector_correlation0_1,synergy1_coeff_correlation0_1,synergy2_coeff_correlation0_1,stuff0_1,rss_nums=synergy_analysis(directory=directory90_1)
+rss_n=np.append(rss_n,rss_nums,axis=0)
+# vaf_m=np.append(vaf_m,vaf_muscle0_1,axis=0)
+print(np.mean(rss_n, axis = 0))
+# print(np.mean(vaf_m, axis = 0))
+fig, ax = plt.subplots()
+ax.spines['right'].set_visible(False)
+ax.spines['top'].set_visible(False)
+ax.tick_params(axis='both', which='major', labelsize=16)
+ax.tick_params(axis='both', which='minor', labelsize=16)
+# plt.bar([1,2,3,4,5],np.mean(rss_n, axis = 0)*100,tick_label=("1","2","3","4","5"), color='#999999', edgecolor='k', linewidth='1')
+ax.errorbar([1,2,3,4,5],np.mean(rss_n, axis = 0),yerr=stats.sem(rss_n, axis = 0),color='#000000', fmt='-')
+ax.plot([1,2,3,4,5],[0.9,0.9,0.9,0.9,0.9], '--', color='#888888')
+plt.xlabel('NMF Rank', fontsize=20)
+plt.ylabel('VAF', fontsize=20)
+plt.ylim(bottom=0.5, top=1)
+plt.show()
 names=("RF","VL","VM","ST","BF")
-# x_scaled=preprocessing.scale(synergy_coeff0_1)
 
-# elbow_calculator(x_scaled[0:30:2])
-# kmeans = KMeans(n_clusters=2)
-# kmeans.fit(x_scaled[0:30:2])
-# kmeans.predict(x_scaled[0:30:2])
-# labels = kmeans.labels_
-# centroids = kmeans.cluster_centers_
-# fig = plt.figure(figsize=(18,7))
-# ax = fig.add_subplot(111)
-# ax.scatter(y=np.ravel(x_scaled[0:30:2,0]),x=range(1,15),c=labels.astype(np.float),marker="o",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(x_scaled[0:30:2,1]),x=range(1,15),c=labels.astype(np.float),marker="v",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(x_scaled[0:30:2,2]),x=range(1,15),c=labels.astype(np.float),marker="s",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(x_scaled[0:30:2,3]),x=range(1,15),c=labels.astype(np.float),marker="*",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(x_scaled[0:30:2,4]),x=range(1,15),c=labels.astype(np.float),marker="p",edgecolor='k',s=300,alpha=0.5)
-#
-# elbow_calculator(synergy_coeff0_1[0:30:2])
-# kmeans = KMeans(n_clusters=2)
-# kmeans.fit(synergy_coeff0_1[0:30:2])
-# kmeans.predict(synergy_coeff0_1[0:30:2])
-# labels = kmeans.labels_
-# centroids = kmeans.cluster_centers_
-# fig = plt.figure(figsize=(18,7))
-# ax = fig.add_subplot(1d=preprocessing.scale(synergy_coeff0_1)11)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[0:30:2,0]),x=range(1,14),c=labels.astype(np.float),marker="o",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[0:30:2,1]),x=range(1,14),c=labels.astype(np.float),marker="v",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[0:30:2,2]),x=range(1,14),c=labels.astype(np.float),marker="s",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[0:30:2,3]),x=range(1,14),c=labels.astype(np.float),marker="*",edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[0:30:2,4]),x=range(1,14),c=labels.astype(np.float),marker="p",edgecolor='k',s=300,alpha=0.5)
-#
-# elbow_calculator(synergy_coeff0_1[1:30:2])
-# kmeans1 = KMeans(n_clusters=4)
-# kmeans1.fit(synergy_coeff0_1[1:30:2])
-# kmeans1.predict(synergy_coeff0_1[1:30:2])
-# labels1 = kmeans1.labels_25
-# centroids = kmeans1.cluster_centers_
-# fig = plt.figure(figsize=(18,7))
-# ax = fig.add_subplot(111)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[1:30:2,0]),x=range(1,15),c=labels1.astype(np.float),marker="o", edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[1:30:2,1]),x=range(1,15),c=labels1.astype(np.float),marker="v",  edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[1:30:2,2]),x=range(1,15),c=labels1.astype(np.float),marker="s",  edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[1:30:2,3]),x=range(1,15),c=labels1.astype(np.float),marker="*",  edgecolor='k',s=300,alpha=0.5)
-# ax.scatter(y=np.ravel(synergy_coeff0_1[1:30:2,4]),x=range(1,15),c=labels1.astype(np.float),marker="p",  edgecolor='k',s=300,alpha=0.5)
-#
-#
-# elbow_calculator(synergy_coeff0_1[0:30:2])
-# kmeans = KMeans(n_clusters=3)
-# kmeans.fit(synergy_coeff0_1[0:30:2])
-# kmeans.predict(synergy_coeff0_1[0:30:2])
-# labels = kmeans.labels_
-#
-# elbow_calculator(synergy_coeff20_1[0:30:2])
-# kmeans1 = KMeans(n_clusters=3)
-# kmeans1.fit(synergy_coeff20_1[0:30:2])
-# kmeans1.predict(synergy_coeff20_1[0:30:2])
-# labels1 = kmeans1.labels_
-#
-# elbow_calculator(synergy_coeff60_1[0:30:2])
-# kmeans2 = KMeans(n_clusters=3)
-# kmeans2.fit(synergy_coeff60_1[0:30:2])
-# kmeans2.predict(synergy_coeff60_1[0:30:2])
-# labels2 = kmeans2.labels_
-#
-# elbow_calculator(synergy_coeff90_1[0:30:2])
-# kmeans3 = KMeans(n_clusters=3)
-# kmeans3.fit(synergy_coeff90_1[0:30:2])
-# kmeans3.predict(synergy_coeff90_1[0:30:2])
-# labels3 = kmeans3.labels_
-#
-# p=np.vstack(((labels,labels2,labels3)))
-#
-# elbow_calculator(synergy_coeff0_1[1:30:2])
-# kmeans = KMeans(n_clusters=2)
-# kmeans.fit(synergy_coeff0_1[1:30:2])
-# kmeans.predict(synergy_coeff0_1[1:30:2])
-# labels = kmeans.labels_
-#
-# elbow_calculator(synergy_coeff20_1[1:30:2])
-# kmeans1 = KMeans(n_clusters=2)
-# kmeans1.fit(synergy_coeff20_1[1:30:2])
-# kmeans1.predict(synergy_coeff20_1[1:30:2])
-# labels1 = kmeans1.labels_
-#
-# elbow_calculator(synergy_coeff60_1[1:30:2])
-# kmeans2 = KMeans(n_clusters=2)
-# kmeans2.fit(synergy_coeff60_1[1:30:2])
-# kmeans2.predict(synergy_coeff60_1[1:30:2])
-# labels2 = kmeans2.labels_
-#
-# elbow_calculator(synergy_coeff90_1[1:30:2])
-# kmeans3 = KMeans(n_clusters=2)
-# kmeans3.fit(synergy_coeff90_1[1:30:2])
-# kmeans3.predict(synergy_coeff90_1[1:30:2])
-# labels3 = kmeans3.labels_
-#
-# p=np.vstack(((labels,labels2,labels3)))
-#
-#
-# elbow_calculator(synergy_coeff20_1[0:30:2])
-# kmeans = KMeans(n_clusters=2)
-# kmeans.fit(synergy_coeff20_1[0:30:2])
-# kmeans.predict(synergy_coeff20_1[0:30:2])
-# labels = kmeans.labels_
-# centroids = kmeans.cluster_centers_
-# plt.figure()
-# plt.scatter(np.ravel(synergy_coeff20_1[0:30:2,0]),y=range(1,14),c=labels.astype(np.float),marker="o",  edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff20_1[0:30:2,1]),y=range(1,14),c=labels.astype(np.float),marker="v", edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff20_1[0:30:2,2]),y=range(1,14),c=labels.astype(np.float),marker="s", edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff20_1[0:30:2,3]),y=range(1,14),c=labels.astype(np.float),marker="*", edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff20_1[0:30:2,4]),y=range(1,14),c=labels.astype(np.float),marker="p", edgecolor='k')
-#
-# elbow_calculator(synergy_coeff60_1[0:30:2])
-# kmeans = KMeans(n_clusters=2)
-# kmeans.fit(synergy_coeff60_1[0:30:2])
-# kmeans.predict(synergy_coeff60_1[0:30:2])
-# labels = kmeans.labels_
-# centroids = kmeans.cluster_centers_
-# plt.figure()
-# plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,0]),y=range(1,15),c=labels.astype(np.float),marker="o",  edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,1]),y=range(1,15),c=labels.astype(np.float),marker="v", edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,2]),y=range(1,15),c=labels.astype(np.float),marker="s", edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,3]),y=range(1,15),c=labels.astyp0e(np.float),marker="*", edgecolor='k')
-# plt.scatter(np.ravel(synergy_coeff60_1[0:30:2,4]),y=range(1,15),c=labels.astype(np.float),marker="p", edgecolor='k')
-# labels = kmeans.predict(synergy_coeff0_1[0:30:2])
+# vector0_1,synergy_coeff0_1,stuff0_1 = synergy_analysis_shared(directory="S1_seperated by angle/p2")
 
-# a=np.asarray(range(0,14))
-# a_1=np.asarray(range(0,13))
-# b=np.asarray(list(itertools.combinations(a,2)))
-# c=np.asarray(list(itertools.combinations(a_1,2)))
-#
-# print(synergy2_vector_correlation0_1.shape)
-# print(b.shape)
-#
-# b[np.where(synergy2_vector_correlation0_1>0.6)]
-# c[np.where(synergy2_vector_correlation20_1>0.6)]
-# b[np.where(synergy2_vector_correlation60_1>0.6)]
-# b[np.where(synergy2_vector_correlation90_1>0.6)]
-#
-# print(synergy_coeff0_1.shape)
-#
 average_synergy1_coeff0_1=np.zeros([1,5])
 average_synergy2_coeff0_1=np.zeros([1,5])
-average_synergy3_coeff0_1=np.zeros([1,5])
+# average_synergy3_coeff0_1=np.zeros([1,5])
 for coeff in range(0,5):
-    average_synergy1_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[0:30:3,coeff])
+    average_synergy1_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[0:30:2,coeff])
 for coeff in range(0,5):
-    average_synergy2_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[1:30:3,coeff])
-for coeff in range(0,5):
-    average_synergy3_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[2:30:3,coeff])
+    average_synergy2_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[1:30:2,coeff])
+# for coeff in range(0,5):
+#     average_synergy3_coeff0_1[0,coeff]=np.mean(synergy_coeff0_1[2:30:3,coeff])
 
 average_synergy1_vector0_1=np.zeros([1,20000])
 average_synergy2_vector0_1=np.zeros([1,20000])
-average_synergy3_vector0_1=np.zeros([1,20000])
+# average_synergy3_vector0_1=np.zeros([1,20000])
 for vector in range(0,20000):
-    average_synergy1_vector0_1[0,vector]=np.mean(vector0_1[0:30:3,vector])
+    average_synergy1_vector0_1[0,vector]=np.mean(vector0_1[0:30:2,vector])
 for vector in range(0,20000):
-    average_synergy2_vector0_1[0,vector]=np.mean(vector0_1[1:30:3,vector])
-for vector in range(0,20000):
-    average_synergy3_vector0_1[0,vector]=np.mean(vector0_1[2:30:3,vector])
+    average_synergy2_vector0_1[0,vector]=np.mean(vector0_1[1:30:2,vector])
+# for vector in range(0,20000):
+#     average_synergy3_vector0_1[0,vector]=np.mean(vector0_1[2:30:3,vector])
 
 average_synergy1_stuff0_1=np.zeros([1,20000])
 average_synergy2_stuff0_1=np.zeros([1,20000])
@@ -877,90 +640,7 @@ average_stuff0_1 = np.append(average_stuff0_1, average_synergy5_stuff0_1[:,1000:
 
 
 
-a,b,c=NMF_calculator(average_stuff0_1,rank=2)
-# a,b,c=NMF_calculator(average_synergy1_stuff0_1,rank=2)
-#
-# average_synergy1_coeff20_1=np.zeros([1,5])
-# average_synergy2_coeff20_1=np.zeros([1,5])
-# for coeff in range(0,5):
-#     average_synergy1_coeff20_1[0,coeff]=np.mean(synergy_coeff20_1[0:30:2,coeff])
-# for coeff in range(0,5):
-#     average_synergy2_coeff20_1[0,coeff]=np.mean(synergy_coeff20_1[1:30:2,coeff])
-#
-# average_synergy1_vector20_1=np.zeros([1,20000])
-# average_synergy2_vector20_1=np.zeros([1,20000])
-# for vector in range(0,20000):
-#     average_synergy1_vector20_1[0,vector]=np.mean(vector20_1[0:30:2,vector])
-# for vector in range(0,20000):
-#     average_synergy2_vector20_1[0,vector]=np.mean(vector20_1[1:30:2,vector])
-#
-# average_synergy1_coeff60_1=np.zeros([1,5])
-# average_synergy2_coeff60_1=np.zeros([1,5])
-# for coeff in range(0,5):
-#     average_synergy1_coeff60_1[0,coeff]=np.mean(synergy_coeff60_1[0:30:2,coeff])
-# for coeff in range(0,5):
-#     average_synergy2_coeff60_1[0,coeff]=np.mean(synergy_coeff60_1[1:30:2,coeff])
-#0_1=np.zeros([1,5])
-# average_synergy2_coeff20_1=np.zeros([1,5])
-# for coeff in range(0,5):
-#     average_synergy1_coeff20_1[0,coeff]=np.mean(synergy_coeff20_1[0:30:2,coeff])
-# for coeff in range(0,5):
-#     average_synergy2_coeff20_1[0,coeff]=np.mean(synergy_coeff20_1[1:30:2,coeff])
-#
-# average_synergy1_vector20_1=np.zeros([1,20000])
-# average_synergy2_vector20_1=np.zeros([1,20000])
-# for vector in range(0,20000):
-#     average_synergy1_vector20_1[0,vector]=np.mean(vector20_1[0:30:2,vector])
-# for vector in range(0,20000):
-#     average_synergy2_vector20_1[0,vector]=np.mean(vector20_1[1:30:2,vector])
-# average_synergy1_vector60_1=np.zeros([1,20000])
-# average_synergy2_vector60_1=np.zeros([1,20000])
-# for vector in range(0,20000):
-#     average_synergy1_vector60_1[0,vector]=np.mean(vector60_1[0:30:2,vector])
-# for vector in range(0,20000):
-#     average_synergy2_vector60_1[0,vector]=np.mean(vector60_1[1:30:2,vector])
-
-# average_synergy1_coeff90_1=np.zeros([1,5])
-# average_synergy2_coeff90_1=np.zeros([1,5])
-# for coeff in range(0,5):
-#     average_synergy1_coeff90_1[0,coeff]=np.mean(synergy_coeff90_1[0:30:2,coeff])
-# for coeff in range(0,5):
-#     average_synergy2_coeff90_1[0,coeff]=np.mean(synergy_coeff90_1[1:30:2,coeff])
-#
-# average_synergy1_vector90_1=np.zeros([1,20000])
-# average_synergy2_vector90_1=np.zeros([1,20000])
-# for vector in range(0,20000):
-#     average_synergy1_vector90_1[0,vector]=np.mean(vector90_1[0:30:2,vector])
-# for vector in range(0,20000):
-#     average_synergy2_vector90_1[0,vector]=np.mean(vector90_1[1:30:2,vector])
-#
-# synergy1_coeff_comparison_0to20=pairwise.cosine_similarity(average_synergy1_coeff0_1,average_synergy1_coeff20_1)
-# synergy1_coeff_comparison_0to60=pairwise.cosine_similarity(average_synergy1_coeff0_1,average_synergy1_coeff60_1)
-# synergy1_coeff_comparison_0to90=pairwise.cosine_similarity(average_synergy1_coeff0_1,average_synergy1_coeff90_1)
-# synergy1_coeff_comparison_20to60=pairwise.cosine_similarity(average_synergy1_coeff20_1,average_synergy1_coeff60_1)
-# synergy1_coeff_comparison_20to90=pairwise.cosine_similarity(average_synergy1_coeff20_1,average_synergy1_coeff90_1)
-# synergy1_coeff_comparison_60to90=pairwise.cosine_similarity(average_synergy1_coeff60_1,average_synergy1_coeff90_1)
-#
-# synergy1_vector_comparison_0to20=pairwise.cosine_similarity(average_synergy1_vector0_1,average_synergy1_vector20_1)
-# synergy1_vector_comparison_0to60=pairwise.cosine_similarity(average_synergy1_vector0_1,average_synergy1_vector60_1)
-# synergy1_vector_comparison_0to90=pairwise.cosine_similarity(average_synergy1_vector0_1,average_synergy1_vector90_1)
-# synergy1_vector_comparison_20to60=pairwise.cosine_similarity(average_synergy1_vector20_1,average_synergy1_vector60_1)
-# synergy1_vector_comparison_20to90=pairwise.cosine_similarity(average_synergy1_vector20_1,average_synergy1_vector90_1)
-# synergy1_vector_comparison_60to90=pairwise.cosine_similarity(average_synergy1_vector60_1,average_synergy1_vector90_1)
-#
-# synergy2_coeff_comparison_0to20=pairwise.cosine_similarity(average_synergy2_coeff0_1,average_synergy2_coeff20_1)
-# synergy2_coeff_comparison_0to60=pairwise.cosine_similarity(average_synergy2_coeff0_1,average_synergy2_coeff60_1)
-# synergy2_coeff_comparison_0to90=pairwise.cosine_similarity(average_synergy2_coeff0_1,average_synergy2_coeff90_1)
-# synergy2_coeff_comparison_20to60=pairwise.cosine_similarity(average_synergy2_coeff20_1,average_synergy2_coeff60_1)
-# synergy2_coeff_comparison_20to90=pairwise.cosine_similarity(average_synergy2_coeff20_1,average_synergy2_coeff90_1)
-# synergy2_coeff_comparison_60to90=pairwise.cosine_similarity(average_synergy2_coeff60_1,average_synergy2_coeff90_1)
-#
-# synergy2_vector_comparison_0to20=pairwise.cosine_similarity(average_synergy2_vector0_1,average_synergy2_vector20_1)
-# synergy2_vector_comparison_0to60=pairwise.cosine_similarity(average_synergy2_vector0_1,average_synergy2_vector60_1)
-# synergy2_vector_comparison_0to90=pairwise.cosine_similarity(average_synergy2_vector0_1,average_synergy2_vector90_1)
-# synergy2_vector_comparison_20to60=pairwise.cosine_similarity(average_synergy2_vector20_1,average_synergy2_vector60_1)
-# synergy2_vector_comparison_20to90=pairwise.cosine_similarity(average_synergy2_vector20_1,average_synergy2_vector90_1)
-# synergy2_vector_comparison_60to90=pairwise.cosine_similarity(average_synergy2_vector60_1,average_synergy2_vector90_1)
+a,b,c,rss=NMF_calculator(average_stuff0_1,rank=2)
 
 index = np.arange(5)
 names=("RF","VL","VM","ST","BF")
@@ -975,29 +655,14 @@ def plot_line(x):
     for line in range(0,np.shape(x)[0]):
         plt.plot(index,x[line,:])
 
-# plot_line(vaf_muscle0_1)
-# plot_line(vaf_muscle20_1)
-# plot_line(vaf_muscle60_1)
-# plot_line(vaf_muscle90_1)
-
 plt.figure()
-plt.subplot(311)
+plt.subplot(211)
 plt.plot(average_synergy1_vector0_1[0])
-plt.subplot(312)
+plt.subplot(212)
 plt.plot(average_synergy2_vector0_1[0])
-plt.subplot(313)
-plt.plot(average_synergy3_vector0_1[0])
+# plt.subplot(313)
+# plt.plot(average_synergy3_vector0_1[0])
 plt.show()
-# plt.plot(average_synergy1_vector20_1[0])
-# plt.show()
-# plt.plot(average_synergy2_vector20_1[0])
-# plt.show()
-# plt.plot(average_synergy1_vector60_1[0])
-# plt.plot(average_synergy2_vector60_1[0])
-# plt.plot(average_synergy1_vector90_1[0])
-# plt.show()
-# plt.plot(average_synergy2_vector90_1[0])
-# plt.show()
 
 plt.figure()
 plt.subplot(511)
@@ -1022,68 +687,14 @@ plt.subplot(413)
 plt.plot(c[0].tolist()[0])
 plt.subplot(414)
 plt.plot(c[1].tolist()[0])
-# plt.plot(vector20_1[0])
-# plt.plot(vector20_1[1])
-# plt.plot(vector20_1[2])
-# plt.plot(vector20_1[3])
-# plt.plot(vector20_1[4])
-# plt.plot(vector20_1[3])
-# plt.plot(vector60_1[2])
-# plt.plot(vector60_1[3])
-# plt.plot(vector90_1[0])
-# plt.plot(vector90_1[1])
-# plt.plot(vector90_1[2])
-# plt.plot(vector90_1[3])
-# plt.plot(vector90_1[4])
+
 plt.show()
-# plt.plot(vector0_1[4])
-# plt.plot(vector0_1[5])
-# plt.plot(vector0_1[6])
-# plt.plot(vector0_1[7])
-# plt.plot(vector0_1[8])
-# plt.plot(vector0_1[9])
-# plt.plot(vector0_1[10])
-# plt.plot(vector0_1[11])
-# plt.plot(vector0_1[12])
-# plt.plot(vector0_1[13])
-# plt.plot(vector0_1[14])
-# plt.plot(vector0_1[15])
-# plt.plot(vector0_1[16])
-# plt.plot(vector0_1[17])
-# plt.plot(vector0_1[18])
-# plt.plot(vector0_1[19])
-# plt.plot(vector0_1[20])
-# plt.plot(vector0_1[21])
-# plt.plot(vector0_1[22])
-# plt.plot(vector0_1[23])
-# plt.plot(vector0_1[24])
-# plt.plot(vector0_1[25])
-# plt.plot(vector0_1[26])
-# plt.plot(vector0_1[27])
 
 
 plt.figure()
 plt.bar(index,np.ravel(average_synergy1_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy1_coeff20_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy1_coeff60_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy1_coeff90_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-
-plt.show()
 
 plt.figure()
 plt.bar(index,np.ravel(average_synergy2_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy2_coeff20_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy2_coeff60_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy2_coeff90_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 
-# plt.figure()
-# plt.bar(index,np.ravel(average_synergy3_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy2_coeff20_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy2_coeff60_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-# plt.bar(index,np.ravel(average_synergy2_coeff90_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
-
-plt.show()
-
-plt.figure()
-plt.bar(index,np.ravel(average_synergy3_coeff0_1),tick_label=("RF","VL","VM","ST","BF"),color=("red","blue","green","gold","deeppink"))
 plt.show()

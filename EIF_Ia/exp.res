@@ -1,3 +1,3 @@
 <Mapping type="Reset">
-1,13	3,45	1.0
+2,13	2,80	1.0
 </Mapping>

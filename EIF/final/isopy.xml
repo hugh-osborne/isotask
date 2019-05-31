@@ -46,7 +46,7 @@
 <Connection In="INT_EXT" Out="MN_ST">70 0.052 0.002</Connection>
 <Connection In="INT_FLEX" Out="MN_RF">70 0.052 0.002</Connection>
 
-<Connection In="INT_FLEX" Out="INT_ST">70 0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="INT_ST">70 -0.052 0.002</Connection>
 <Connection In="INT_EXT" Out="INT_RF">70 0.052 0.002</Connection>
 
 <Connection In="INT_ST" Out="MN_ST">70 -0.052 0.002</Connection>
