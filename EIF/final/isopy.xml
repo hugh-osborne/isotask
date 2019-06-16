@@ -69,6 +69,8 @@
 <OutgoingConnection Node="MN_BF"/>
 </Connections>
 <Reporting>
+<Density node="MN_RF" t_start="0.0" t_end="11.0" t_interval="0.001" />
+<Density node="MN_ST" t_start="0.0" t_end="11.0" t_interval="0.001" />
 </Reporting>
 <SimulationIO>
 <SimulationName>iso</SimulationName>
