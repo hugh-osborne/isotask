@@ -52,33 +52,15 @@ print('Simulation Length (s) from XML : {}'.format(simulation_length))
 # we want to kill the child processes so that sim() is not called more than once.
 miind.startSimulation()
 
-# For Agonist/Antagonist relationship only
-# bg_input = [310,310,310,310,370,370,370,370,370]
-#  0 degrees : prop_input = [190,440,440,440,0,0,0,0,0]
-# 20 degrees : prop_input = [190,372,372,372,0,0,0,0,0]
-# 60 degrees : prop_input = [190,306,306,306,0,0,0,0,0]
-# 90 degrees : prop_input = [190,240,240,240,0,0,0,0,0]
-
-# For RF Flexor Bias
-# bg_input = [310,310,310,310,370,370,370,370,370]
-#  0 degrees : prop_input = [190,190,190,0,0,0,0,0,0]
-# 90 degrees : prop_input = [190,190,190,170,0,0,0,0,0]
-
-# For ST Extensor Bias
-# bg_input = [310,310,310,310,370,370,370,370,370]
-#  0 degrees : prop_input = [190,190,0,190,0,0,0,0,0]
-# 90 degrees : prop_input = [190,190,170,190,0,0,0,0,0]
-
-# Mix of everything
+# pops = [Flex Aff,Ext Aff,InhibST,InhibRF,RF,Vl,VL,ST,BF]
 # bg_input = [310,310,310,310,310,310,310,310,310]
-#  0 degrees : prop_input = [190,390,50,0,0,0,0,0,0]
-# 20 degrees : prop_input = [190,340,90,10,0,0,0,0,0]
-# 60 degrees : prop_input = [190,290,140,20,0,0,0,0,0]
-# 90 degrees : prop_input = [190,240,180,60,0,0,0,0,0]
-# Maximal    : prop_input = [190,200,250,100,0,0,0,0,0]
+#  0 degrees : prop_input = [190,300,50,0,0,0,0,0,0]
+# 20 degrees : prop_input = [190,340,0,0,0,0,0,0,0]
+# 60 degrees : prop_input = [190,290,0,0,0,0,0,0,0]
+# 90 degrees : prop_input = [190,210,50,100,0,0,0,0,0]
 
-filename = 'avg_20'
-prop_input = [190,290,140,20,0,0,0,0,0]
+filename = 'ag_90_zero'
+prop_input = [190,210,50,100,0,0,0,0,0]
 bg_input = [310,310,310,310,310,310,310,310,310]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0,0,0]
@@ -86,7 +68,7 @@ supra_input = [0,0,0,0,0,0,0,0,0]
 outputs = []
 t = 0.0
 
-rate = [0.0,0.0,0.0,0.0,80.0,80.0,80.0,80.0,80.0]
+rate = [300.0,300.0,0.0,0.0,25.0,0.0,0.0,0.0,0.0]
 start_flexion = (numpy.ones(len(supra_input))*2).tolist()
 up_ramp = [1,1,1,1,1,1,1,1,1]
 down_ramp = [1,1,1,1,1,1,1,1,1]

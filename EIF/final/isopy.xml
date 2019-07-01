@@ -26,31 +26,31 @@
 </Nodes>
 <Connections>
 
-<Connection In="INT_EXT" Out="MN_RF">70 -0.052 0.002</Connection>
-<Connection In="INT_EXT" Out="MN_VL">70 -0.052 0.002</Connection>
-<Connection In="INT_EXT" Out="MN_VM">70 -0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_RF">35 -0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_VL">35 -0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_VM">35 -0.052 0.002</Connection>
 
-<Connection In="INT_FLEX" Out="MN_ST">70 -0.052 0.002</Connection>
-<Connection In="INT_FLEX" Out="MN_BF">70 -0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_ST">35 -0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_BF">35 -0.052 0.002</Connection>
 
-<Connection In="INT_EXT" Out="MN_ST">70 0.052 0.002</Connection>
-<Connection In="INT_EXT" Out="MN_BF">70 0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_ST">100 0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_BF">100 0.052 0.002</Connection>
 
-<Connection In="INT_FLEX" Out="MN_RF">70 0.052 0.002</Connection>
-<Connection In="INT_FLEX" Out="MN_VL">70 0.052 0.002</Connection>
-<Connection In="INT_FLEX" Out="MN_VM">70 0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_RF">100 0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_VL">100 0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_VM">100 0.052 0.002</Connection>
 
 <Connection In="INT_FLEX" Out="INT_EXT">70 -0.052 0.002</Connection>
 <Connection In="INT_EXT" Out="INT_FLEX">70 -0.052 0.002</Connection>
 
-<Connection In="INT_EXT" Out="MN_ST">70 0.052 0.002</Connection>
-<Connection In="INT_FLEX" Out="MN_RF">70 0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_ST">100 0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_RF">150 0.052 0.002</Connection>
 
-<Connection In="INT_EXT" Out="INT_ST">70 -0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="INT_ST">70 0.052 0.002</Connection>
 <Connection In="INT_EXT" Out="INT_RF">70 0.052 0.002</Connection>
 
-<Connection In="INT_ST" Out="MN_ST">70 -0.052 0.002</Connection>
-<Connection In="INT_RF" Out="MN_RF">70 -0.052 0.002</Connection>
+<Connection In="INT_ST" Out="MN_ST">35 -0.052 0.002</Connection>
+<Connection In="INT_RF" Out="MN_RF">35 -0.052 0.002</Connection>
 
 <IncomingConnection Node="INT_FLEX">100 0.1 0</IncomingConnection>
 <IncomingConnection Node="INT_EXT">100 0.1 0</IncomingConnection>
@@ -69,8 +69,9 @@
 <OutgoingConnection Node="MN_BF"/>
 </Connections>
 <Reporting>
-<Density node="MN_RF" t_start="0.0" t_end="11.0" t_interval="0.001" />
+<!--<Density node="MN_RF" t_start="0.0" t_end="11.0" t_interval="0.001" />
 <Density node="MN_ST" t_start="0.0" t_end="11.0" t_interval="0.001" />
+<Density node="MN_VL" t_start="0.0" t_end="11.0" t_interval="0.001" />-->
 </Reporting>
 <SimulationIO>
 <SimulationName>iso</SimulationName>
