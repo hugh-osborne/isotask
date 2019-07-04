@@ -54,21 +54,21 @@ miind.startSimulation()
 
 # pops = [Flex Aff,Ext Aff,InhibST,InhibRF,RF,Vl,VL,ST,BF]
 # bg_input = [310,310,310,310,310,310,310,310,310]
-#  0 degrees : prop_input = [190,300,50,0,0,0,0,0,0]
+#  0 degrees : prop_input = [190,300,0,50,0,0,0,0,0]
 # 20 degrees : prop_input = [190,340,0,0,0,0,0,0,0]
 # 60 degrees : prop_input = [190,290,0,0,0,0,0,0,0]
-# 90 degrees : prop_input = [190,210,50,100,0,0,0,0,0]
+# 90 degrees : prop_input = [190,210,200,50,0,0,0,0,0]
 
 filename = 'ag_90_zero'
-prop_input = [190,210,50,100,0,0,0,0,0]
-bg_input = [310,310,310,310,310,310,310,310,310]
+prop_input = [100,150,0,50,0,0,0,0,0]
+bg_input = [300,300,0,0,300,300,300,300,300]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0,0,0]
 
 outputs = []
 t = 0.0
 
-rate = [300.0,300.0,0.0,0.0,25.0,0.0,0.0,0.0,0.0]
+rate = [250.0,250.0,0.0,0.0,5.0,0.0,0.0,0.0,0.0]
 start_flexion = (numpy.ones(len(supra_input))*2).tolist()
 up_ramp = [1,1,1,1,1,1,1,1,1]
 down_ramp = [1,1,1,1,1,1,1,1,1]
