@@ -53,21 +53,14 @@ print('Simulation Length (s) from XML : {}'.format(simulation_length))
 miind.startSimulation()
 
 # pops = [Flex Aff,Ext Aff,InhibST,InhibRF,RF,Vl,VL,ST,BF]
-# bg_input = [400,400,300,300,300,300,300,300,300]
-#  0 degrees : prop_input = [100,180,0,0,0,0,0,0,0]
-# 20 degrees : prop_input = [90,135,200,200,0,0,0,0,0]
-# 60 degrees : prop_input = [90,120,400,400,0,0,0,0,0]
-# 90 degrees : prop_input = [100,120,0,0,0,0,0,0,00]
+# bg_input = [400,400,400,400,300,300,300,300,300]
+#  0 degrees : prop_input = [90,170,110,90,0,0,0,0,0]
+# 20 degrees : prop_input = [90,150,110,90,0,0,0,0,0]
+# 60 degrees : prop_input = [90,130,110,90,0,0,0,0,0]
+# 90 degrees : prop_input = [90,110,110,90,0,0,0,0,0]
 
-# high G AND high A produces good results
-# high G but low A produces crappy results (no RF small ST/BF difference)
-# low G and high A produces crapy results
-# try low G with high A but with high C. even worse.
-# high G high A low C very nice!
-# trying high G high A low C high E/F high input to InhibRF and inhibST
-
-filename = 'ag_90_zero'
-prop_input = [100,120,0,0,0,0,0,0,0]
+filename = 'avg_90_extra'
+prop_input = [90,100,110,90,0,0,0,0,0]
 bg_input = [400,400,300,300,300,300,300,300,300]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0,0,0]
@@ -75,7 +68,7 @@ supra_input = [0,0,0,0,0,0,0,0,0]
 outputs = []
 t = 0.0
 
-rate = [400.0,400.0,400.0,400.0,0.0,0.0,0.0,0.0,0.0]
+rate = [400.0,400.0,0.0,0.0,15.0,0.0,0.0,0.0,0.0]
 start_flexion = (numpy.ones(len(supra_input))*2).tolist()
 up_ramp = [1,1,1,1,1,1,1,1,1]
 down_ramp = [1,1,1,1,1,1,1,1,1]
