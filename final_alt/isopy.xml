@@ -1,0 +1,109 @@
+<Simulation>
+<WeightType>DelayedConnection</WeightType>
+<Algorithms>
+<Algorithm type="MeshAlgorithm" name="E" tau_refractive="0.0025" modelfile="exp.model" >
+<TimeStep>0.0001</TimeStep>
+<MatrixFile>exp_0.1_0_0_0_.mat</MatrixFile>
+<MatrixFile>exp_-0.1_0_0_0_.mat</MatrixFile>
+<MatrixFile>exp_-0.052_0_0_0_.mat</MatrixFile>
+<MatrixFile>exp_0.052_0_0_0_.mat</MatrixFile>
+</Algorithm>
+</Algorithms>
+<Nodes>
+<Node algorithm="E" name="INT_FLEX" type="NEUTRAL" />
+
+<Node algorithm="E" name="INT_EXT" type="NEUTRAL" />
+
+<Node algorithm="E" name="INT_ST" type="NEUTRAL" />
+<Node algorithm="E" name="INT_RF" type="NEUTRAL" />
+
+<Node algorithm="E" name="MN_RF" type="NEUTRAL" />
+<Node algorithm="E" name="MN_VL" type="NEUTRAL" />
+<Node algorithm="E" name="MN_VM" type="NEUTRAL" />
+
+<Node algorithm="E" name="MN_ST" type="NEUTRAL" />
+<Node algorithm="E" name="MN_BF" type="NEUTRAL" />
+</Nodes>
+<Connections>
+
+<Connection In="INT_EXT" Out="MN_RF">35 -0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_VL">35 -0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_VM">35 -0.052 0.002</Connection>
+
+<Connection In="INT_FLEX" Out="MN_ST">35 -0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_BF">35 -0.052 0.002</Connection>
+
+<Connection In="INT_EXT" Out="MN_ST">70 0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="MN_BF">70 0.052 0.002</Connection>
+
+<Connection In="INT_FLEX" Out="MN_RF">70 0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_VL">70 0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_VM">70 0.052 0.002</Connection>
+
+<Connection In="INT_FLEX" Out="INT_EXT">35 -0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="INT_FLEX">35 -0.052 0.002</Connection>
+
+<Connection In="INT_FLEX" Out="INT_RF">70 -0.052 0.002</Connection>
+<Connection In="INT_EXT" Out="INT_ST">70 -0.052 0.002</Connection>
+
+<Connection In="INT_EXT" Out="MN_ST">70 0.052 0.002</Connection>
+<Connection In="INT_FLEX" Out="MN_RF">50 0.052 0.002</Connection>
+
+<Connection In="INT_ST" Out="MN_ST">70 -0.052 0.002</Connection>
+<Connection In="INT_RF" Out="MN_RF">70 -0.052 0.002</Connection>
+
+<IncomingConnection Node="INT_FLEX">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="INT_EXT">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="INT_ST">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="INT_RF">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="MN_RF">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="MN_VL">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="MN_VM">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="MN_ST">100 0.1 0</IncomingConnection>
+<IncomingConnection Node="MN_BF">100 0.1 0</IncomingConnection>
+
+<OutgoingConnection Node="MN_RF"/>
+<OutgoingConnection Node="MN_VL"/>
+<OutgoingConnection Node="MN_VM"/>
+<OutgoingConnection Node="MN_ST"/>
+<OutgoingConnection Node="MN_BF"/>
+</Connections>
+<Reporting>
+<!--<Density node="MN_RF" t_start="0.0" t_end="11.0" t_interval="0.001" />
+<Density node="MN_ST" t_start="0.0" t_end="11.0" t_interval="0.001" />
+<Density node="MN_VL" t_start="0.0" t_end="11.0" t_interval="0.001" />-->
+<Rate node="INT_ST" t_interval="0.001"/>
+<Rate node="INT_RF" t_interval="0.001"/>
+<Rate node="INT_FLEX" t_interval="0.001"/>
+<Rate node="INT_EXT" t_interval="0.001"/>
+<Rate node="MN_ST" t_interval="0.001"/>
+<Rate node="MN_RF" t_interval="0.001"/>
+</Reporting>
+<SimulationIO>
+<SimulationName>iso</SimulationName>
+<OnScreen>FALSE</OnScreen>
+<WithState>TRUE</WithState>
+<WriteNet>FALSE</WriteNet>
+<CanvasParameter>
+<T_min>0</T_min>
+<T_max>0.3</T_max>
+<F_min>0</F_min>
+<F_max>20</F_max>
+<State_min>0</State_min>
+<State_max>1.0</State_max>
+<Dense_min>0</Dense_min>
+<Dense_max>2.5</Dense_max>
+</CanvasParameter>
+<CanvasNode Name="INT_AG" />
+</SimulationIO>
+<SimulationRunParameter>
+<max_iter>1000000</max_iter>
+<t_begin>0</t_begin>
+<t_end>11.0</t_end>
+<t_report>0.0001</t_report>
+<t_state_report>0.0001</t_state_report>
+<t_step>0.0001</t_step>
+<name_log>iso.log</name_log>
+<master_steps>40</master_steps>
+</SimulationRunParameter>
+</Simulation>
