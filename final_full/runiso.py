@@ -39,7 +39,10 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     return y
 
 number_of_nodes = 1
-miind.init(number_of_nodes)
+try:
+    miind.init("isopy.xml")
+except:
+    print("init threw an exception but I don't know why and it doesn't apparently matter.")
 
 timestep = miind.getTimeStep()
 print('Timestep from XML : {}'.format(timestep))
@@ -54,22 +57,31 @@ miind.startSimulation()
 
 # pops = [Flex Aff,Ext Aff,InhibST,InhibRF,RF,Vl,VL,ST,BF]
 # bg_input = [400,400,400,300,300,300,300,300,300]
-#  0 degrees : prop_input = [90,180,100,10,0,0,0,0,0]
-# 20 degrees : prop_input = [90,164,100,10,0,0,0,0,0]
-# 30 degrees : prop_input = [90,156,100,10,0,0,0,0,0]
-# 60 degrees : prop_input = [90,133,100,10,0,0,0,0,0]
-# 90 degrees : prop_input = [90,110,100,10,0,0,0,0,0]
+#  0 degrees : prop_input = [90,180,60,10,0,0,0,0,0]
+# 20 degrees : prop_input = [90,164,60,10,0,0,0,0,0]
+# 30 degrees : prop_input = [90,156,60,10,0,0,0,0,0]
+# 60 degrees : prop_input = [90,133,60,10,0,0,0,0,0]
+# 90 degrees : prop_input = [90,110,60,10,0,0,0,0,0]
 
-filename = 'avg_90'
-prop_input = [90,180,100,10,0,0,0,0,0]
-bg_input = [400,400,400,300,300,300,300,300,300]
+prop_input = [0.0,0.0,0.0,0.0,0,0,0,0,0]
+bg_input = [450,450,450,350,350,350,350,350,350]
 # each MN and assicuated INT gets the same supraspinal input
 supra_input = [0,0,0,0,0,0,0,0,0]
 
 outputs = []
 t = 0.0
 
-rate = [60.0,60.0,0.0,0.0,45.0,20.0,20.0,20.0,20.0]
+filename = 'avg_0'
+rate = [450.0,50.0,50.0,100.0,60.0,50.0,50.0,50.0,50.0]
+#filename = 'avg_20'
+#rate = [350.0,50.0,200.0,100.0,60.0,50.0,50.0,50.0,50.0]
+#filename = 'avg_30'
+#rate = [350.0,50.0,35.0,60.0,60.0,50.0,50.0,50.0,50.0]
+#filename = 'avg_60'
+#rate = [250.0,50.0,15.0,30.0,60.0,50.0,50.0,50.0,50.0]
+#filename = 'avg_90'
+#rate = [150.0,50.0,0.0,0.0,60.0,50.0,50.0,50.0,50.0]
+
 start_flexion = (numpy.ones(len(supra_input))*2).tolist()
 up_ramp = [1,1,1,1,1,1,1,1,1]
 down_ramp = [1,1,1,1,1,1,1,1,1]
@@ -194,18 +206,18 @@ numpy.savetxt(filename + '_vector.csv', W.transpose(), delimiter=",")
 fig, (ax1, ax2, ax3, ax4) = plt.subplots(4,1,figsize=(5,8))
 fig.tight_layout()
 fig.subplots_adjust(top=0.95)
-fig.set_size_inches(3, 18)
+fig.set_size_inches(4, 18)
 
 #plt.figtext(0.25,0.93,"Synergy One", va="center", ha="center", size=30)
 #plt.figtext(0.75,0.93,"Synergy Two", va="center", ha="center", size=30)
 
 show_muscle_labels=True
 show_column_title=False
-col='red'
+col='#222288'
 
 ######
 ax1.set_ylim([0,5.0])
-rects1 = ax1.bar(['RF','VL','VM','ST','BF'], W[0,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0, edgecolor='#000000',linewidth=2, hatch="//")
+rects1 = ax1.bar(['RF','VL','VM','ST','BF'], W[0,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0, edgecolor='#000000',linewidth=2)
 rects1[0].set_color(col)
 rects1[1].set_color(col)
 rects1[2].set_color(col)
@@ -216,7 +228,7 @@ rects1[1].set_edgecolor('#000000')
 rects1[2].set_edgecolor('#000000')
 rects1[3].set_edgecolor('#000000')
 rects1[4].set_edgecolor('#000000')
-ax1.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=20)
+ax1.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=28)
 ax1.yaxis.set_ticks(numpy.arange(0.0, 5.01, 1.0))
 ax1.spines["top"].set_visible(False)
 ax1.spines["right"].set_visible(False)
@@ -228,7 +240,7 @@ ax2.set_ylim([0,0.25])
 rects1 = ax2.plot([x * 0.002 for x in range(len(H[:,0]))],H[:,0],color=col, linewidth=3)
 
 ax2.xaxis.set_ticks(numpy.arange(0, 8.01, 8))
-ax2.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=20)
+ax2.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=28)
 ax2.spines["top"].set_visible(False)
 ax2.spines["right"].set_visible(False)
 ax2.spines["left"].set_visible(False)
@@ -236,7 +248,7 @@ ax2.plot()
 
 #######
 ax3.set_ylim([0,4.0])
-rects1 = ax3.bar(['RF','VL','VM','ST','BF'], W[1,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0, edgecolor='#000000',linewidth=2, hatch="//")
+rects1 = ax3.bar(['RF','VL','VM','ST','BF'], W[1,:].tolist()[0], 0.6, color=col, label='Position 1',capsize=2, alpha=1.0, edgecolor='#000000',linewidth=2)
 rects1[0].set_color(col)
 rects1[1].set_color(col)
 rects1[2].set_color(col)
@@ -248,7 +260,7 @@ rects1[2].set_edgecolor('#000000')
 rects1[3].set_edgecolor('#000000')
 rects1[4].set_edgecolor('#000000')
 ax3.yaxis.set_ticks(numpy.arange(0.0, 4.01, 1.0))
-ax3.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=20)
+ax3.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=28)
 ax3.spines["top"].set_visible(False)
 ax3.spines["right"].set_visible(False)
 ax3.spines["left"].set_visible(False)
@@ -259,7 +271,7 @@ ax4.set_ylim([0,0.13])
 rects1 = ax4.plot([x * 0.002 for x in range(len(H[:,1]))],H[:,1],color=col, linewidth=3)
 
 ax4.xaxis.set_ticks(numpy.arange(0, 8.01, 8))
-ax4.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=20)
+ax4.tick_params(axis='both',which='both',left=False,bottom=False,labelbottom=show_muscle_labels,labelleft=False,labelsize=28)
 ax4.spines["top"].set_visible(False)
 ax4.spines["right"].set_visible(False)
 ax4.spines["left"].set_visible(False)
