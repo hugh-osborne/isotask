@@ -1,0 +1,81 @@
+<Simulation>
+<WeightType>CustomConnectionParameters</WeightType>
+<Algorithms>
+<Algorithm type="MeshAlgorithmGroup" name="E" tau_refractive="0.0025" modelfile="exp.model" >
+<TimeStep>0.0001</TimeStep>
+<MatrixFile>exp_0.1_0_0_0_.mat</MatrixFile>
+<MatrixFile>exp_-0.1_0_0_0_.mat</MatrixFile>
+<MatrixFile>exp_-0.052_0_0_0_.mat</MatrixFile>
+<MatrixFile>exp_0.052_0_0_0_.mat</MatrixFile>
+</Algorithm>
+</Algorithms>
+<Nodes>
+<Node algorithm="E" name="INT_FLEX" type="NEUTRAL" />
+
+<Node algorithm="E" name="INT_EXT" type="NEUTRAL" />
+
+<Node algorithm="E" name="INT_ST" type="NEUTRAL" />
+<Node algorithm="E" name="INT_RF" type="NEUTRAL" />
+
+<Node algorithm="E" name="MN_RF" type="NEUTRAL" />
+<Node algorithm="E" name="MN_VL" type="NEUTRAL" />
+<Node algorithm="E" name="MN_VM" type="NEUTRAL" />
+
+<Node algorithm="E" name="MN_ST" type="NEUTRAL" />
+<Node algorithm="E" name="MN_BF" type="NEUTRAL" />
+</Nodes>
+<Connections>
+
+<Connection In="INT_EXT" Out="MN_RF" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+<Connection In="INT_EXT" Out="MN_VL" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+<Connection In="INT_EXT" Out="MN_VM" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+
+<Connection In="INT_FLEX" Out="MN_ST" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+<Connection In="INT_FLEX" Out="MN_BF" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+
+<Connection In="INT_EXT" Out="MN_ST" num_connections="50.0" efficacy="0.052" delay="0.002"/>
+<Connection In="INT_EXT" Out="MN_BF" num_connections="50.0" efficacy="0.052" delay="0.002"/>
+
+<Connection In="INT_FLEX" Out="MN_RF" num_connections="50.0" efficacy="0.052" delay="0.002"/>
+<Connection In="INT_FLEX" Out="MN_VL" num_connections="50.0" efficacy="0.052" delay="0.002"/>
+<Connection In="INT_FLEX" Out="MN_VM" num_connections="50.0" efficacy="0.052" delay="0.002"/>
+
+<Connection In="INT_FLEX" Out="INT_EXT" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+<Connection In="INT_EXT" Out="INT_FLEX" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+
+<Connection In="INT_FLEX" Out="INT_RF" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+<Connection In="INT_EXT" Out="INT_ST" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+
+<Connection In="INT_EXT" Out="MN_ST" num_connections="50.0" efficacy="0.052" delay="0.002"/>
+<Connection In="INT_FLEX" Out="MN_RF" num_connections="50.0" efficacy="0.052" delay="0.002"/>
+
+<Connection In="INT_ST" Out="MN_ST" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+<Connection In="INT_RF" Out="MN_RF" num_connections="50.0" efficacy="-0.052" delay="0.002"/>
+
+<IncomingConnection Node="INT_FLEX" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="INT_EXT" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="INT_ST" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="INT_RF" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="MN_RF" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="MN_VL" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="MN_VM" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="MN_ST" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+<IncomingConnection Node="MN_BF" num_connections="100.0" efficacy="0.1" delay="0.0"/>
+
+<OutgoingConnection Node="MN_RF"/>
+<OutgoingConnection Node="MN_VL"/>
+<OutgoingConnection Node="MN_VM"/>
+<OutgoingConnection Node="MN_ST"/>
+<OutgoingConnection Node="MN_BF"/>
+</Connections>
+<Reporting>
+</Reporting>
+<SimulationRunParameter>
+<max_iter>1000000</max_iter>
+<t_begin>0</t_begin>
+<t_end>11.0</t_end>
+<t_step>0.0001</t_step>
+<name_log>iso.log</name_log>
+<master_steps>10</master_steps>
+</SimulationRunParameter>
+</Simulation>

@@ -11,17 +11,8 @@ import imp
 import datetime
 from operator import add
 from random import randint
-import libisopy as miind
+import miind.miindsimv as miind
 import nimfa
-
-# Comment out MPI, comm and rank lines below if not using
-# MPI
-#######################
-from mpi4py import MPI
-
-comm = MPI.COMM_WORLD
-rank = comm.Get_rank()
-#######################
 
 from scipy.signal import butter, lfilter
 
@@ -39,10 +30,7 @@ def butter_bandpass_filter(data, lowcut, highcut, fs, order=5):
     return y
 
 number_of_nodes = 1
-try:
-    miind.init("isopy.xml")
-except:
-    print("init threw an exception but I don't know why and it doesn't apparently matter.")
+miind.init(number_of_nodes, 'isopy.xml')
 
 timestep = miind.getTimeStep()
 print('Timestep from XML : {}'.format(timestep))
